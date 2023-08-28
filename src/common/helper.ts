@@ -1,5 +1,5 @@
 import { BigNumber, ethers } from "ethers";
-import { NumberDecimal } from "../interface";
+import BigNumDec from "./BigNumDec";
 
 export function getEnumKeyByEnumValue<T extends { [index: string]: string }>(
   myEnum: T,
@@ -28,14 +28,16 @@ export function getEnumEntryByValue<T extends { [index: string]: string }>(
   return keys.length > 0 ? myEnum[keys[0] as keyof T] : null;
 }
 
-export function toNumberDecimal(
-  input: BigNumber,
-  decimals: number
-): NumberDecimal {
-  return {
-    value: input.toString(),
-    decimals: decimals,
-  };
+export function toBND(input: BigNumber, decimals: number): BigNumDec {
+  return BigNumDec.from(input, decimals);
+}
+
+export function toBNDSynV2(input: BigNumber): BigNumDec {
+  return BigNumDec.from(input, 18);
+}
+
+export function toBNDGmxV1(input: BigNumber): BigNumDec {
+  return BigNumDec.from(input, 30);
 }
 
 export function formatN(value: BigNumber, decimals: number = 18): string {

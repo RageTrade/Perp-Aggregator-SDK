@@ -1,4 +1,5 @@
-import { BigNumber, BigNumberish, UnsignedTransaction, ethers } from "ethers";
+import { UnsignedTransaction, ethers } from "ethers";
+import BigNumDec from "./common/BigNumDec";
 
 export type Provider = ethers.providers.Provider;
 
@@ -53,37 +54,32 @@ export type Market = {
   supportedOrderActions?: Record<OrderAction["orderAction"], Boolean>;
 } & MarketIdentifier;
 
-export type NumberDecimal = {
-  value: string;
-  decimals: number;
-};
-
 export type StaticMarketMetadata = {
-  maxLeverage?: NumberDecimal;
+  maxLeverage?: BigNumDec;
   address?: string;
   asset?: string;
-  minInitialMargin?: NumberDecimal;
-  minPositionSize?: NumberDecimal;
-  minLeverage?: NumberDecimal;
+  minInitialMargin?: BigNumDec;
+  minPositionSize?: BigNumDec;
+  minLeverage?: BigNumDec;
 };
 
 export type DynamicMarketMetadata = {
-  price?: BigNumber;
-  oiLong?: BigNumber;
-  oiShort?: BigNumber;
-  oiTotal?: BigNumber;
-  fundingRate?: BigNumber;
-  fundingVelocity?: BigNumber;
-  borrowRate?: BigNumber;
-  makerFee?: BigNumber;
-  takerFee?: BigNumber;
-  availableLiquidity?: BigNumber;
-  availableLiquidityLongUSD?: BigNumber;
-  availableLiquidityShortUSD?: BigNumber;
-  oiLongUsd: BigNumber;
-  oiShortUsd: BigNumber;
-  marketLimitUsd: BigNumber;
-  marketLimitNative: BigNumber;
+  price?: BigNumDec;
+  oiLong?: BigNumDec;
+  oiShort?: BigNumDec;
+  oiTotal?: BigNumDec;
+  fundingRate?: BigNumDec;
+  fundingVelocity?: BigNumDec;
+  borrowRate?: BigNumDec;
+  makerFee?: BigNumDec;
+  takerFee?: BigNumDec;
+  availableLiquidity?: BigNumDec;
+  availableLiquidityLongUSD?: BigNumDec;
+  availableLiquidityShortUSD?: BigNumDec;
+  oiLongUsd: BigNumDec;
+  oiShortUsd: BigNumDec;
+  marketLimitUsd: BigNumDec;
+  marketLimitNative: BigNumDec;
 };
 
 export type ProtocolMetadata = {
@@ -94,53 +90,53 @@ export type ExtendedMarket = Market & StaticMarketMetadata & ProtocolMetadata;
 
 export type Position = {
   indexOrIdentifier: string;
-  size: BigNumber;
-  collateral: BigNumber;
+  size: BigNumDec;
+  collateral: BigNumDec;
   // find equivalent on SNX
-  averageEntryPrice: BigNumber;
+  averageEntryPrice: BigNumDec;
   // verify accrued funding for SNX
-  cumulativeFunding?: BigNumber;
+  cumulativeFunding?: BigNumDec;
   // check for SNX
   lastUpdatedAtTimestamp?: number;
 };
 
 export type ExtendedPosition = Position & {
-  unrealizedPnl?: BigNumber;
-  liqudationPrice?: BigNumber;
-  otherFees?: BigNumber;
-  fee?: BigNumber;
-  leverage?: BigNumber;
+  unrealizedPnl?: BigNumDec;
+  liqudationPrice?: BigNumDec;
+  otherFees?: BigNumDec;
+  fee?: BigNumDec;
+  leverage?: BigNumDec;
   status?: number;
-  priceImpact?: BigNumber;
+  priceImpact?: BigNumDec;
   exceedsPriceProtection?: boolean;
-  sizeDelta?: BigNumber;
-  skewAdjustedPrice?: BigNumber;
+  sizeDelta?: BigNumDec;
+  skewAdjustedPrice?: BigNumDec;
   direction?: OrderDirection;
-  accessibleMargin?: BigNumber;
+  accessibleMargin?: BigNumDec;
   marketAddress?: string;
   originalCollateralToken?: string;
   indexToken?: Token;
   collateralToken: Token;
-  pnlwithoutfees?: BigNumber;
-  closeFee?: BigNumber;
-  swapFee?: BigNumber;
-  borrowFee?: BigNumber;
-  positionFee?: BigNumber;
-  collateralAfterFee?: BigNumber;
-  delta?: BigNumber;
+  pnlwithoutfees?: BigNumDec;
+  closeFee?: BigNumDec;
+  swapFee?: BigNumDec;
+  borrowFee?: BigNumDec;
+  positionFee?: BigNumDec;
+  collateralAfterFee?: BigNumDec;
+  delta?: BigNumDec;
   hasProfit?: boolean;
   marketIdentifier?: MarketIdentifier["indexOrIdentifier"];
-  entryFundingRate?: BigNumber;
-  cumulativeFundingRate?: BigNumber;
+  entryFundingRate?: BigNumDec;
+  cumulativeFundingRate?: BigNumDec;
   protocolMetadata?: ProtocolMetadata;
 };
 
 export type Trade = ExtendedPosition & {
   isLiquidated?: boolean;
-  totalDeposits?: BigNumber;
+  totalDeposits?: BigNumDec;
   positionClosed?: boolean;
-  keeperFeesPaid?: BigNumber;
-  pnl?: BigNumber;
+  keeperFeesPaid?: BigNumDec;
+  pnl?: BigNumDec;
   txHash?: string;
   txLink?: string;
 };
@@ -149,19 +145,19 @@ export type TradeHistory = {
   marketIdentifier: MarketIdentifier;
   timestamp: number;
   operation: string;
-  sizeDelta: BigNumber;
+  sizeDelta: BigNumDec;
   direction?: OrderDirection;
-  price: BigNumber;
-  collateralDelta: BigNumber;
-  realisedPnl: BigNumber;
-  keeperFeesPaid?: BigNumber;
+  price: BigNumDec;
+  collateralDelta: BigNumDec;
+  realisedPnl: BigNumDec;
+  keeperFeesPaid?: BigNumDec;
   isTriggerAboveThreshold?: Boolean;
   txHash: string;
 };
 
 export type CollateralData = {
   inputCollateral: Token;
-  inputCollateralAmount: BigNumber;
+  inputCollateralAmount: BigNumDec;
   shouldWrap?: boolean;
 };
 
@@ -171,15 +167,15 @@ export type Order = {
   direction: OrderDirection;
 
   // in SNX cannot update size and collateral delta in same call
-  sizeDelta: BigNumber;
+  sizeDelta: BigNumDec;
   isTriggerOrder: Boolean;
   referralCode: string | undefined;
   trigger:
-  | {
-    triggerPrice: BigNumber;
-    triggerAboveThreshold: boolean;
-  }
-  | undefined;
+    | {
+        triggerPrice: BigNumDec;
+        triggerAboveThreshold: boolean;
+      }
+    | undefined;
 } & CollateralData;
 
 export type ExtendedOrder = Order &
@@ -190,7 +186,7 @@ export type ExtendedOrder = Order &
   };
 
 // at any point in time, there is only one delayed order per market for SNX
-export type OrderIdentifier = BigNumberish;
+export type OrderIdentifier = string;
 
 export type OpenMarketData = ExtendedMarket &
   Network & { openMarketIdentifier: string };
@@ -228,9 +224,9 @@ export interface IExchange {
   closePosition(
     provider: Provider,
     position: ExtendedPosition,
-    closeSize: BigNumber,
+    closeSize: BigNumDec,
     isTrigger: boolean,
-    triggerPrice: BigNumber | undefined,
+    triggerPrice: BigNumDec | undefined,
     triggerAboveThreshold: boolean | undefined,
     outputToken: Token | undefined
   ): Promise<UnsignedTransaction[]>;
@@ -238,14 +234,17 @@ export interface IExchange {
   updatePositionMargin(
     provider: Provider,
     position: ExtendedPosition,
-    marginAmount: BigNumber,
+    marginAmount: BigNumDec,
     isDeposit: boolean,
     transferToken: Token | undefined
   ): Promise<UnsignedTransaction[]>;
 
-  getMarketPrice(market: ExtendedMarket): Promise<NumberDecimal>;
+  getMarketPrice(market: ExtendedMarket): Promise<BigNumDec>;
 
-  getDynamicMetadata(market: ExtendedMarket, provider?: Provider): Promise<DynamicMarketMetadata>;
+  getDynamicMetadata(
+    market: ExtendedMarket,
+    provider?: Provider
+  ): Promise<DynamicMarketMetadata>;
 
   // @dev There can be only 1 order per market per user for SNX
   getOrder(
@@ -307,9 +306,9 @@ export interface IExchange {
     user: string,
     provider: Provider,
     position: ExtendedPosition,
-    closeSize: BigNumber,
+    closeSize: BigNumDec,
     isTrigger: boolean,
-    triggerPrice: BigNumber | undefined,
+    triggerPrice: BigNumDec | undefined,
     triggerAboveThreshold: boolean | undefined,
     outputToken: Token | undefined
   ): Promise<ExtendedPosition>;
@@ -318,7 +317,7 @@ export interface IExchange {
     user: string,
     provider: Provider,
     position: ExtendedPosition,
-    marginDelta: BigNumber,
+    marginDelta: BigNumDec,
     isDeposit: boolean
   ): Promise<ExtendedPosition>;
 }

@@ -9,7 +9,6 @@ import {
   Market,
   MarketIdentifier,
   Network,
-  NumberDecimal,
   OpenMarkets,
   Order,
   Position,
@@ -51,8 +50,9 @@ import {
   getCloseTradePreviewInternal,
   getEditCollateralPreviewInternal,
 } from "../configs/gmx/tokens";
-import { logObject, toNumberDecimal } from "../common/helper";
+import { logObject, toBND } from "../common/helper";
 import { timer } from "execution-time-decorators";
+import BigNumDec from "../common/BigNumDec";
 
 export default class GmxV1Service implements IExchange {
   private REFERRAL_CODE = ethers.utils.hexZeroPad(
@@ -237,8 +237,8 @@ export default class GmxV1Service implements IExchange {
         asset: indexToken.symbol,
         indexOrIdentifier: this.getTokenAddress(indexToken),
         marketToken: indexToken,
-        maxLeverage: toNumberDecimal(BigNumber.from("50"), 0),
-        minInitialMargin: toNumberDecimal(BigNumber.from("0"), 0),
+        maxLeverage: toBND(BigNumber.from("50"), 0),
+        minInitialMargin: toBND(BigNumber.from("0"), 0),
         protocolName: this.protocolIdentifier,
       });
     });
@@ -246,7 +246,7 @@ export default class GmxV1Service implements IExchange {
     return markets;
   }
 
-  async getMarketPrice(market: ExtendedMarket): Promise<NumberDecimal> {
+  async getMarketPrice(market: ExtendedMarket): Promise<BigNumDec> {
     const indexPricesUrl = getServerUrl(ARBITRUM, "/prices");
     const response = await fetch(indexPricesUrl);
     const jsonResponse = await response.json();
@@ -254,10 +254,7 @@ export default class GmxV1Service implements IExchange {
 
     const indexPrice = jsonResponse[market.indexOrIdentifier];
 
-    return {
-      value: bigNumberify(indexPrice)!.toString(),
-      decimals: USD_DECIMALS,
-    };
+    return toBND(BigNumber.from(indexPrice), USD_DECIMALS);
   }
 
   async getMarketPriceByIndexAddress(indexAddr: string): Promise<BigNumber> {
@@ -500,7 +497,7 @@ export default class GmxV1Service implements IExchange {
 
       eos.push({
         orderAction: "CREATE",
-        orderIdentifier: order.index as number,
+        orderIdentifier: String(order.index as number),
         type: order.type == "Increase" ? "LIMIT_INCREASE" : "LIMIT_DECREASE",
         direction: order.isLong ? "LONG" : "SHORT",
         sizeDelta: order.sizeDelta as BigNumber,

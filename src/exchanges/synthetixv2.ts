@@ -1,5 +1,5 @@
 import KwentaSDK from "@kwenta/sdk";
-import { BigNumber, UnsignedTransaction, BigNumberish } from "ethers";
+import { BigNumber, UnsignedTransaction } from "ethers";
 import {
   ExtendedPosition,
   IExchange,
@@ -19,7 +19,6 @@ import {
   Trade,
   TradeHistory,
   HistoricalOrderType,
-  NumberDecimal,
   PROTOCOL_NAME,
   Provider,
 } from "../interface";
@@ -38,10 +37,12 @@ import {
   formatN,
   getEnumEntryByValue,
   logObject,
-  toNumberDecimal,
+  toBND,
+  toBNDSynV2,
 } from "../common/helper";
 import { getExplorerUrl } from "../configs/gmx/chains";
 import { timer } from "execution-time-decorators";
+import BigNumDec from "../common/BigNumDec";
 
 export default class SynthetixV2Service implements IExchange {
   private opChainId = 10;
@@ -122,17 +123,11 @@ export default class SynthetixV2Service implements IExchange {
         },
         asset: m.asset,
         address: m.market,
-        maxLeverage: toNumberDecimal(
-          m.contractMaxLeverage!.toBN(),
-          this.decimals
-        ),
-        minInitialMargin: toNumberDecimal(
-          m.minInitialMargin!.toBN(),
-          this.decimals
-        ),
+        maxLeverage: toBND(m.contractMaxLeverage!.toBN(), this.decimals),
+        minInitialMargin: toBND(m.minInitialMargin!.toBN(), this.decimals),
         protocolName: this.protocolIdentifier,
-        minPositionSize: toNumberDecimal(BigNumber.from(0), this.decimals),
-        minLeverage: toNumberDecimal(BigNumber.from(0), this.decimals),
+        minPositionSize: toBND(BigNumber.from(0), this.decimals),
+        minLeverage: toBND(BigNumber.from(0), this.decimals),
       };
 
       extendedMarkets.push(extendedMarket);
@@ -149,45 +144,47 @@ export default class SynthetixV2Service implements IExchange {
     );
 
     return {
-      oiLong: futureMarket.openInterest.long.toBN(),
-      oiShort: futureMarket.openInterest.short.toBN(),
-      fundingRate: futureMarket.currentFundingRate.toBN(),
-      fundingVelocity: futureMarket.currentFundingVelocity.toBN(),
-      makerFee: futureMarket.feeRates.makerFeeOffchainDelayedOrder.toBN(),
-      takerFee: futureMarket.feeRates.takerFeeOffchainDelayedOrder.toBN(),
-      availableLiquidityLongUSD: futureMarket.marketLimitUsd
-        .sub(futureMarket.openInterest.longUSD)
-        .toBN(),
-      availableLiquidityShortUSD: futureMarket.marketLimitUsd
-        .sub(futureMarket.openInterest.shortUSD)
-        .toBN(),
-      oiLongUsd: futureMarket.openInterest.longUSD.toBN(),
-      oiShortUsd: futureMarket.openInterest.shortUSD.toBN(),
-      marketLimitUsd: futureMarket.marketLimitUsd.toBN(),
-      marketLimitNative: futureMarket.marketLimitNative.toBN(),
+      oiLong: toBNDSynV2(futureMarket.openInterest.long.toBN()),
+      oiShort: toBNDSynV2(futureMarket.openInterest.short.toBN()),
+      fundingRate: toBNDSynV2(futureMarket.currentFundingRate.toBN()),
+      fundingVelocity: toBNDSynV2(futureMarket.currentFundingVelocity.toBN()),
+      makerFee: toBNDSynV2(
+        futureMarket.feeRates.makerFeeOffchainDelayedOrder.toBN()
+      ),
+      takerFee: toBNDSynV2(
+        futureMarket.feeRates.takerFeeOffchainDelayedOrder.toBN()
+      ),
+      availableLiquidityLongUSD: toBNDSynV2(
+        futureMarket.marketLimitUsd
+          .sub(futureMarket.openInterest.longUSD)
+          .toBN()
+      ),
+      availableLiquidityShortUSD: toBNDSynV2(
+        futureMarket.marketLimitUsd
+          .sub(futureMarket.openInterest.shortUSD)
+          .toBN()
+      ),
+      oiLongUsd: toBNDSynV2(futureMarket.openInterest.longUSD.toBN()),
+      oiShortUsd: toBNDSynV2(futureMarket.openInterest.shortUSD.toBN()),
+      marketLimitUsd: toBNDSynV2(futureMarket.marketLimitUsd.toBN()),
+      marketLimitNative: toBNDSynV2(futureMarket.marketLimitNative.toBN()),
     };
   }
 
-  async getMarketPrice(market: ExtendedMarket): Promise<NumberDecimal> {
-    return {
-      value: (
+  async getMarketPrice(market: ExtendedMarket): Promise<BigNumDec> {
+    return toBNDSynV2(
+      (
         await this.sdk.futures.getAssetPrice(
           await this.getMarketAddress(market)
         )
-      )
-        .toBN()
-        .toString(),
-      decimals: 18,
-    };
+      ).toBN()
+    );
   }
 
-  async getMarketPriceByAddress(marketAddress: string): Promise<NumberDecimal> {
-    return {
-      value: (await this.sdk.futures.getAssetPrice(marketAddress))
-        .toBN()
-        .toString(),
-      decimals: 18,
-    };
+  async getMarketPriceByAddress(marketAddress: string): Promise<BigNumDec> {
+    return toBNDSynV2(
+      (await this.sdk.futures.getAssetPrice(marketAddress)).toBN()
+    );
   }
 
   async createOrder(
@@ -411,10 +408,7 @@ export default class SynthetixV2Service implements IExchange {
       status: tradePreview.status,
       fee: tradePreview.fee,
       leverage: tradePreview.margin
-        ? tradePreview.size
-            .mul(marketPrice.value)
-            .div(tradePreview.margin)
-            .abs()
+        ? tradePreview.size.mul(marketPrice).div(tradePreview.margin).abs()
         : undefined,
     };
   }
@@ -460,10 +454,7 @@ export default class SynthetixV2Service implements IExchange {
       status: tradePreview.status,
       fee: tradePreview.fee,
       leverage: tradePreview.margin
-        ? tradePreview.size
-            .mul(marketPrice.value)
-            .div(tradePreview.margin)
-            .abs()
+        ? tradePreview.size.mul(marketPrice).div(tradePreview.margin).abs()
         : undefined,
     };
   }
@@ -514,10 +505,7 @@ export default class SynthetixV2Service implements IExchange {
       status: tradePreview.status,
       fee: tradePreview.fee,
       leverage: tradePreview.margin
-        ? tradePreview.size
-            .mul(marketPrice.value)
-            .div(tradePreview.margin)
-            .abs()
+        ? tradePreview.size.mul(marketPrice).div(tradePreview.margin).abs()
         : undefined,
     };
   }
