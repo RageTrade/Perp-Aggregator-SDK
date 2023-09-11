@@ -22,7 +22,9 @@ import {
   NumberDecimal,
   PROTOCOL_NAME,
   Provider,
+  UnsignedTxWithMetadata
 } from "../interface";
+import { ValidationModule } from '../tx-metadata-types'
 import Wei, { wei } from "@synthetixio/wei";
 import {
   ContractOrderType,
@@ -81,7 +83,7 @@ export default class SynthetixV2Service implements IExchange {
     return markets.find((m) => m.marketKey == marketKey);
   }
 
-  setup(provider: Provider): Promise<UnsignedTransaction[]> {
+  setup(provider: Provider): Promise<UnsignedTxWithMetadata[]> {
     return Promise.resolve([]);
   }
 
@@ -192,8 +194,8 @@ export default class SynthetixV2Service implements IExchange {
     provider: Provider,
     market: ExtendedMarket,
     order: Order
-  ): Promise<UnsignedTransaction[]> {
-    let txs: UnsignedTransaction[] = [];
+  ): Promise<UnsignedTxWithMetadata[]> {
+    let txs: UnsignedTxWithMetadata[] = [];
     if (order.sizeDelta.eq(0)) return txs;
 
     const marketAddress = await this.getMarketAddress(market);
@@ -218,13 +220,15 @@ export default class SynthetixV2Service implements IExchange {
         ? wei(order.sizeDelta).neg()
         : wei(order.sizeDelta);
 
-    txs.push(
-      (await this.sdk.futures.submitIsolatedMarginOrder(
+    txs.push({
+      tx: (await this.sdk.futures.submitIsolatedMarginOrder(
         marketAddress,
         sizeDelta,
         wei(order.trigger?.triggerPrice)
-      )) as UnsignedTransaction
-    );
+      )) as UnsignedTransaction,
+      sessionKeyData: { module: "SNX_V2" },
+      addtionalSessionData: undefined
+    });
 
     return txs;
   }
@@ -233,7 +237,7 @@ export default class SynthetixV2Service implements IExchange {
     provider: Provider,
     market: Market | undefined,
     updatedOrder: Partial<ExtendedOrder>
-  ): Promise<UnsignedTransaction[]> {
+  ): Promise<UnsignedTxWithMetadata[]> {
     throw new Error("Method not Supported.");
   }
 
@@ -241,15 +245,19 @@ export default class SynthetixV2Service implements IExchange {
     provider: Provider,
     market: ExtendedMarket,
     order: Partial<ExtendedOrder>
-  ): Promise<UnsignedTransaction[]> {
+  ): Promise<UnsignedTxWithMetadata[]> {
     const marketAddress = await this.getMarketAddress(market);
 
     return [
-      await this.sdk.futures.cancelDelayedOrder(
-        marketAddress,
-        this.swAddr,
-        true
-      ),
+      {
+        tx: await this.sdk.futures.cancelDelayedOrder(
+          marketAddress,
+          this.swAddr,
+          true
+        ),
+        sessionKeyData: { module: "SNX_V2" },
+        addtionalSessionData: undefined
+      }
     ];
   }
 
@@ -261,7 +269,7 @@ export default class SynthetixV2Service implements IExchange {
     triggerPrice: BigNumber | undefined,
     triggerAboveThreshold: boolean | undefined,
     outputToken: Token | undefined
-  ): Promise<UnsignedTransaction[]> {
+  ): Promise<UnsignedTxWithMetadata[]> {
     if (closeSize.eq(0) || closeSize.gt(position.size)) {
       throw new Error("Invalid close size");
     }
@@ -320,8 +328,8 @@ export default class SynthetixV2Service implements IExchange {
     position: ExtendedPosition,
     marginAmount: BigNumber,
     isDeposit: boolean
-  ): Promise<UnsignedTransaction[]> {
-    let txs: UnsignedTransaction[] = [];
+  ): Promise<UnsignedTxWithMetadata[]> {
+    let txs: UnsignedTxWithMetadata[] = [];
 
     // validation
     if (
@@ -421,9 +429,9 @@ export default class SynthetixV2Service implements IExchange {
       leverage:
         order.inputCollateralAmount && order.inputCollateralAmount.gt(0)
           ? tradePreview.size
-              .mul(marketPrice.value)
-              .div(order.inputCollateralAmount)
-              .abs()
+            .mul(marketPrice.value)
+            .div(order.inputCollateralAmount)
+            .abs()
           : undefined,
     };
   }
@@ -468,9 +476,9 @@ export default class SynthetixV2Service implements IExchange {
       fee: tradePreview.fee.add(tradePreview.keeperFee),
       leverage: tradePreview.margin
         ? tradePreview.size
-            .mul(marketPrice.value)
-            .div(tradePreview.margin)
-            .abs()
+          .mul(marketPrice.value)
+          .div(tradePreview.margin)
+          .abs()
         : undefined,
     };
   }
@@ -523,9 +531,9 @@ export default class SynthetixV2Service implements IExchange {
       fee: tradePreview.fee.add(tradePreview.keeperFee),
       leverage: tradePreview.margin
         ? tradePreview.size
-            .mul(marketPrice.value)
-            .div(tradePreview.margin)
-            .abs()
+          .mul(marketPrice.value)
+          .div(tradePreview.margin)
+          .abs()
         : undefined,
       receiveAmount: isFullClose ? tradePreview.margin : BigNumber.from(0),
       receiveUsd: isFullClose ? tradePreview.margin : BigNumber.from(0),
@@ -767,8 +775,8 @@ export default class SynthetixV2Service implements IExchange {
   async withdrawUnusedCollateral(
     user: string,
     provider: Provider
-  ): Promise<UnsignedTransaction[]> {
-    let txs: UnsignedTransaction[] = [];
+  ): Promise<UnsignedTxWithMetadata[]> {
+    let txs: UnsignedTxWithMetadata[] = [];
 
     await this.sdk.setProvider(provider);
     // withdraw unused collateral tx's
@@ -877,16 +885,20 @@ export default class SynthetixV2Service implements IExchange {
   }
 
   async formulateWithdrawTx(marketAddress: string, withdrawAmount: Wei) {
-    return (await this.sdk.futures.withdrawIsolatedMargin(
+    const withdrawTx = (await this.sdk.futures.withdrawIsolatedMargin(
       marketAddress,
       withdrawAmount
     )) as UnsignedTransaction;
+
+    return { tx: withdrawTx, sessionKeyData: { module: "SNX_V2" as ValidationModule }, addtionalSessionData: undefined } as UnsignedTxWithMetadata
   }
 
   async formulateDepositTx(marketAddress: string, depositAmount: Wei) {
-    return (await this.sdk.futures.depositIsolatedMargin(
+    const depositTx = (await this.sdk.futures.depositIsolatedMargin(
       marketAddress,
       depositAmount
     )) as UnsignedTransaction;
+
+    return { tx: depositTx, sessionKeyData: { module: "SNX_V2" as ValidationModule }, addtionalSessionData: undefined } as UnsignedTxWithMetadata
   }
 }
