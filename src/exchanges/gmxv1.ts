@@ -165,7 +165,7 @@ export default class GmxV1Service implements IExchange {
         this.REFERRAL_CODE
       );
     txs.push({
-      tx: setReferralCodeTx, sessionKeyData: { sessionKey: DEFAULT_SESSION_KEY, sender: this.swAddr, type: "GMX_V1" }, additionalSessionData: undefined
+      tx: setReferralCodeTx, type: "GMX_V1", data: undefined
     });
 
     // approve router
@@ -177,7 +177,7 @@ export default class GmxV1Service implements IExchange {
       getContract(ARBITRUM, "OrderBook")!
     );
     txs.push({
-      tx: approveOrderBookTx, sessionKeyData: { sessionKey: DEFAULT_SESSION_KEY, sender: this.swAddr, type: "GMX_V1" }, additionalSessionData: undefined
+      tx: approveOrderBookTx, type: "GMX_V1", data: undefined
     });
 
     const approvePositionRouterTx =
@@ -185,7 +185,7 @@ export default class GmxV1Service implements IExchange {
         getContract(ARBITRUM, "PositionRouter")!
       );
     txs.push({
-      tx: approvePositionRouterTx, sessionKeyData: { sessionKey: DEFAULT_SESSION_KEY, sender: this.swAddr, type: "GMX_V1" }, additionalSessionData: undefined
+      tx: approvePositionRouterTx, type: "GMX_V1", data: undefined
     });
 
     return txs;
@@ -209,7 +209,7 @@ export default class GmxV1Service implements IExchange {
         router,
         ethers.constants.MaxUint256
       );
-      return { tx, sessionKeyData: { sessionKey: DEFAULT_SESSION_KEY, chainId: ARBITRUM, type: "ERC20_APPROVAL" }, additionalSessionData: { chainId: ARBITRUM, spender: router, token: tokenAddress } };
+      return { tx, type: "ERC20_APPROVAL", data: { chainId: ARBITRUM, spender: router, token: tokenAddress } };
     }
 
   }
@@ -398,7 +398,7 @@ export default class GmxV1Service implements IExchange {
     }
 
     txs.push({
-      tx: createOrderTx!, sessionKeyData: { sessionKey: DEFAULT_SESSION_KEY, sender: this.swAddr, type: "GMX_V1" }, additionalSessionData: undefined
+      tx: createOrderTx!, type: "GMX_V1", data: undefined
     });
 
     return txs;
@@ -435,7 +435,7 @@ export default class GmxV1Service implements IExchange {
       throw new Error("Invalid order type");
     }
 
-    return [{ tx: updateOrderTx, sessionKeyData: { sessionKey: DEFAULT_SESSION_KEY, sender: this.swAddr, type: "GMX_V1" }, additionalSessionData: undefined }];
+    return [{ tx: updateOrderTx, type: "GMX_V1", data: undefined }];
   }
 
   async cancelOrder(
@@ -462,7 +462,7 @@ export default class GmxV1Service implements IExchange {
       throw new Error("Invalid order type");
     }
 
-    return [{ tx: cancelOrderTx, sessionKeyData: { sessionKey: DEFAULT_SESSION_KEY, sender: this.swAddr, type: "GMX_V1" }, additionalSessionData: undefined }];
+    return [{ tx: cancelOrderTx, type: "GMX_V1", data: undefined }];
   }
 
   getOrder(
@@ -820,7 +820,7 @@ export default class GmxV1Service implements IExchange {
         );
     }
 
-    txs.push({ tx: marginTx, sessionKeyData: { sessionKey: DEFAULT_SESSION_KEY, sender: this.swAddr, type: "GMX_V1" }, additionalSessionData: undefined });
+    txs.push({ tx: marginTx, type: "GMX_V1", data: undefined });
 
     return txs;
   }
@@ -903,7 +903,7 @@ export default class GmxV1Service implements IExchange {
             value: this.EXECUTION_FEE,
           }
         );
-      txs.push({ tx: createOrderTx, sessionKeyData: { sessionKey: DEFAULT_SESSION_KEY, sender: this.swAddr, type: "GMX_V1" }, additionalSessionData: undefined });
+      txs.push({ tx: createOrderTx, type: "GMX_V1", data: undefined });
     } else {
       const orderBook = OrderBook__factory.connect(
         getContract(ARBITRUM, "OrderBook")!,
@@ -923,7 +923,7 @@ export default class GmxV1Service implements IExchange {
             value: this.EXECUTION_FEE,
           }
         );
-      txs.push({ tx: createOrderTx, sessionKeyData: { sessionKey: DEFAULT_SESSION_KEY, sender: this.swAddr, type: "GMX_V1" }, additionalSessionData: undefined });
+      txs.push({ tx: createOrderTx, type: "GMX_V1", data: undefined });
     }
 
     return txs;
