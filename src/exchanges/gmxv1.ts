@@ -19,6 +19,7 @@ import {
   TRIGGER_TYPE,
   Provider,
   UnsignedTxWithMetadata,
+  DEFAULT_SESSION_KEY,
 } from "../interface";
 import {
   IERC20__factory,
@@ -164,7 +165,7 @@ export default class GmxV1Service implements IExchange {
         this.REFERRAL_CODE
       );
     txs.push({
-      tx: setReferralCodeTx, sessionKeyData: { module: "GMX_V1", sender: this.swAddr }, addtionalSessionData: undefined
+      tx: setReferralCodeTx, sessionKeyData: { sessionKey: DEFAULT_SESSION_KEY, sender: this.swAddr }, addtionalSessionData: undefined
     });
 
     // approve router
@@ -176,7 +177,7 @@ export default class GmxV1Service implements IExchange {
       getContract(ARBITRUM, "OrderBook")!
     );
     txs.push({
-      tx: approveOrderBookTx, sessionKeyData: { module: "GMX_V1", sender: this.swAddr }, addtionalSessionData: undefined
+      tx: approveOrderBookTx, sessionKeyData: { sessionKey: DEFAULT_SESSION_KEY, sender: this.swAddr }, addtionalSessionData: undefined
     });
 
     const approvePositionRouterTx =
@@ -184,7 +185,7 @@ export default class GmxV1Service implements IExchange {
         getContract(ARBITRUM, "PositionRouter")!
       );
     txs.push({
-      tx: approvePositionRouterTx, sessionKeyData: { module: "GMX_V1", sender: this.swAddr }, addtionalSessionData: undefined
+      tx: approvePositionRouterTx, sessionKeyData: { sessionKey: DEFAULT_SESSION_KEY, sender: this.swAddr }, addtionalSessionData: undefined
     });
 
     return txs;
@@ -208,7 +209,7 @@ export default class GmxV1Service implements IExchange {
         router,
         ethers.constants.MaxUint256
       );
-      return { tx, sessionKeyData: { module: "ERC20_APPROVAL", chainId: ARBITRUM }, addtionalSessionData: { chainId: ARBITRUM, spender: router, token: tokenAddress } };
+      return { tx, sessionKeyData: { sessionKey: DEFAULT_SESSION_KEY, chainId: ARBITRUM }, addtionalSessionData: { chainId: ARBITRUM, spender: router, token: tokenAddress } };
     }
 
   }
@@ -397,7 +398,7 @@ export default class GmxV1Service implements IExchange {
     }
 
     txs.push({
-      tx: createOrderTx!, sessionKeyData: { module: "GMX_V1", sender: this.swAddr }, addtionalSessionData: undefined
+      tx: createOrderTx!, sessionKeyData: { sessionKey: DEFAULT_SESSION_KEY, sender: this.swAddr }, addtionalSessionData: undefined
     });
 
     return txs;
@@ -434,7 +435,7 @@ export default class GmxV1Service implements IExchange {
       throw new Error("Invalid order type");
     }
 
-    return [{ tx: updateOrderTx, sessionKeyData: { module: "GMX_V1" }, addtionalSessionData: undefined }];
+    return [{ tx: updateOrderTx, sessionKeyData: { sessionKey: DEFAULT_SESSION_KEY, sender: this.swAddr }, addtionalSessionData: undefined }];
   }
 
   async cancelOrder(
@@ -461,7 +462,7 @@ export default class GmxV1Service implements IExchange {
       throw new Error("Invalid order type");
     }
 
-    return [{ tx: cancelOrderTx, sessionKeyData: { module: "GMX_V1" }, addtionalSessionData: undefined }];
+    return [{ tx: cancelOrderTx, sessionKeyData: { sessionKey: DEFAULT_SESSION_KEY, sender: this.swAddr }, addtionalSessionData: undefined }];
   }
 
   getOrder(
@@ -819,7 +820,7 @@ export default class GmxV1Service implements IExchange {
         );
     }
 
-    txs.push({ tx: marginTx, sessionKeyData: { module: "GMX_V1", sender: this.swAddr }, addtionalSessionData: undefined });
+    txs.push({ tx: marginTx, sessionKeyData: { sessionKey: DEFAULT_SESSION_KEY, sender: this.swAddr }, addtionalSessionData: undefined });
 
     return txs;
   }
@@ -902,7 +903,7 @@ export default class GmxV1Service implements IExchange {
             value: this.EXECUTION_FEE,
           }
         );
-      txs.push({ tx: createOrderTx, sessionKeyData: { module: "GMX_V1", sender: this.swAddr }, addtionalSessionData: undefined });
+      txs.push({ tx: createOrderTx, sessionKeyData: { sessionKey: DEFAULT_SESSION_KEY, sender: this.swAddr }, addtionalSessionData: undefined });
     } else {
       const orderBook = OrderBook__factory.connect(
         getContract(ARBITRUM, "OrderBook")!,
@@ -922,7 +923,7 @@ export default class GmxV1Service implements IExchange {
             value: this.EXECUTION_FEE,
           }
         );
-      txs.push({ tx: createOrderTx, sessionKeyData: { module: "GMX_V1", sender: this.swAddr }, addtionalSessionData: undefined });
+      txs.push({ tx: createOrderTx, sessionKeyData: { sessionKey: DEFAULT_SESSION_KEY, sender: this.swAddr }, addtionalSessionData: undefined });
     }
 
     return txs;
