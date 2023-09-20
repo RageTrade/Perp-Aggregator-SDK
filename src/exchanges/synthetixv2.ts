@@ -425,6 +425,7 @@ export default class SynthetixV2Service implements IExchange {
       );
 
     const tradePreview1 = await this.sdk.futures.getIsolatedTradePreview(
+      user,
       marketAddress,
       getEnumEntryByValue(FuturesMarketKey, market.indexOrIdentifier!)!,
       ContractOrderType.DELAYED_OFFCHAIN,

@@ -759,6 +759,7 @@ export default class FuturesService {
 	}
 
 	public async getIsolatedTradePreview(
+		user: string,
 		marketAddress: string,
 		marketKey: FuturesMarketKey,
 		orderType: ContractOrderType,
@@ -773,7 +774,7 @@ export default class FuturesService {
 			inputs.sizeDelta.toBN(),
 			inputs.price.toBN(),
 			orderType,
-			this.sdk.context.walletAddress
+			user
 		)
 
 		const skewAdjustedPrice = await this.getSkewAdjustedPrice(
