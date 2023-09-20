@@ -415,6 +415,7 @@ export default class SynthetixV2Service implements IExchange {
     sizeDelta = order.direction == "LONG" ? sizeDelta : sizeDelta.neg();
 
     const btcCurrentPrice = await getTokenPrice18("BTC");
+    console.log("BTC Price: ", formatUnits(btcCurrentPrice, 18));
 
     const tradePreview =
       await this.sdk.futures.getSimulatedIsolatedTradePreview(
