@@ -46,6 +46,7 @@ import {
 import { getExplorerUrl } from "../configs/gmx/chains";
 import { timer } from "execution-time-decorators";
 import { formatUnits, parseUnits } from "ethers/lib/utils";
+import { getTokenPrice, getTokenPrice18 } from "../configs/pyth/prices";
 
 export default class SynthetixV2Service implements IExchange {
   private opChainId = 10;
@@ -413,6 +414,8 @@ export default class SynthetixV2Service implements IExchange {
     let sizeDelta = wei(order.sizeDelta);
     sizeDelta = order.direction == "LONG" ? sizeDelta : sizeDelta.neg();
 
+    const btcCurrentPrice = await getTokenPrice18("BTC");
+
     const tradePreview =
       await this.sdk.futures.getSimulatedIsolatedTradePreview(
         user,
@@ -423,7 +426,7 @@ export default class SynthetixV2Service implements IExchange {
           marginDelta: wei(order.inputCollateralAmount).sub(
             sUsdBalanceInMarket
           ),
-          orderPrice: wei(order.trigger!.triggerPrice),
+          orderPrice: wei(btcCurrentPrice),
         }
       );
 

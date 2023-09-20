@@ -448,21 +448,21 @@ async function synService() {
     "0x89E369321619114e317a3121A2693f39728f51f1"
   );
 
-  const tradeHistory = await ss.getTradesHistory(
-    "0x4dBc24BEb46fC22CD2322a9fF9e5A99CE0F0c3Eb",
-    undefined
-  );
-  tradeHistory.forEach((t) => {
-    logObject("Trade History: ", t);
-  });
+  // const tradeHistory = await ss.getTradesHistory(
+  //   "0x4dBc24BEb46fC22CD2322a9fF9e5A99CE0F0c3Eb",
+  //   undefined
+  // );
+  // tradeHistory.forEach((t) => {
+  //   logObject("Trade History: ", t);
+  // });
 
-  const liquidationsHistory = await ss.getLiquidationsHistory(
-    "0x4dBc24BEb46fC22CD2322a9fF9e5A99CE0F0c3Eb",
-    undefined
-  );
-  liquidationsHistory.forEach((t) => {
-    logObject("Liq History: ", t);
-  });
+  // const liquidationsHistory = await ss.getLiquidationsHistory(
+  //   "0x4dBc24BEb46fC22CD2322a9fF9e5A99CE0F0c3Eb",
+  //   undefined
+  // );
+  // liquidationsHistory.forEach((t) => {
+  //   logObject("Liq History: ", t);
+  // });
 
   // for (let i = 0; i < 10; i++) {
   //   console.time("Idle margin" + i);
@@ -476,12 +476,31 @@ async function synService() {
   // const allOrders = await ss.getAllOrders(w);
   // allOrders.forEach((o) => logObject("All Orders: ", o));
 
-  // const supportedNetworks = ss.supportedNetworks();
+  const supportedNetworks = ss.supportedNetworks();
   // logObject("Supported Networks: ", supportedNetworks[0]);
 
-  // const supportedMarkets = await ss.supportedMarkets(supportedNetworks[0]);
+  const supportedMarkets = await ss.supportedMarkets(supportedNetworks[0]);
   // logObject("Supported Markets: ", supportedMarkets[0]);
   // supportedMarkets.forEach((market) => logObject("Market: ", market));
+
+  let btcMarket = supportedMarkets.find(
+    (m) => m.indexOrIdentifier == "sBTCPERP"
+  )!;
+
+  for (let i = 0; i < 100; i++) {
+    await delay(1000);
+    const markPrice = await ss.getMarketPrice(btcMarket);
+    const fillPrice = await ss.getFillPriceInternal(
+      btcMarket.address!,
+      wei("0")
+    );
+    console.log(
+      "Mark price: ",
+      markPrice.value,
+      "\nFill price: ",
+      fillPrice.toString()
+    );
+  }
 
   // (await sdk.futures.getMarkets()).forEach(async (market) => {
   //   let price = await sdk.futures.getAssetPrice(market.market);

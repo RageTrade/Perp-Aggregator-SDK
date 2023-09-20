@@ -771,7 +771,7 @@ export default class FuturesService {
 		const market = PerpsV2Market__factory.connect(marketAddress, this.sdk.context.provider)
 		const details = await market.postTradeDetails(
 			inputs.sizeDelta.toBN(),
-			"0",
+			inputs.price.toBN(),
 			orderType,
 			this.sdk.context.walletAddress
 		)
