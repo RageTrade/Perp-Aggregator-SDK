@@ -409,7 +409,6 @@ export default class SynthetixV2Service implements IExchange {
     sizeDelta = order.direction == "LONG" ? sizeDelta : sizeDelta.neg();
 
     const btcCurrentPrice = await getTokenPrice18("BTC");
-    console.log("BTC Price: ", formatUnits(btcCurrentPrice, 18));
 
     const tradePreview =
       await this.sdk.futures.getSimulatedIsolatedTradePreview(
@@ -425,19 +424,32 @@ export default class SynthetixV2Service implements IExchange {
         }
       );
 
+    const tradePreview1 = await this.sdk.futures.getIsolatedTradePreview(
+      marketAddress,
+      getEnumEntryByValue(FuturesMarketKey, market.indexOrIdentifier!)!,
+      ContractOrderType.DELAYED_OFFCHAIN,
+      {
+        sizeDelta: sizeDelta,
+        price: wei(btcCurrentPrice),
+        leverageSide:
+          order.direction == "LONG" ? PositionSide.LONG : PositionSide.SHORT,
+      }
+    );
+
     return {
       indexOrIdentifier: "",
-      size: tradePreview.size.abs(),
-      collateral: tradePreview.margin,
+      size: tradePreview1.size.toBN().abs(),
+      collateral: tradePreview1.margin.toBN(),
       collateralToken: this.sUsd,
-      averageEntryPrice: tradePreview.price,
-      liqudationPrice: tradePreview.liqPrice,
-      otherFees: tradePreview.fee,
-      status: tradePreview.status,
-      fee: tradePreview.fee.add(tradePreview.keeperFee),
+      averageEntryPrice: tradePreview1.skewAdjustedPrice.toBN(),
+      liqudationPrice: tradePreview1.liqPrice.toBN(),
+      otherFees: tradePreview1.fee.toBN(),
+      status: tradePreview1.status,
+      fee: tradePreview1.fee.toBN().add(tradePreview.keeperFee),
       leverage:
         order.inputCollateralAmount && order.inputCollateralAmount.gt(0)
-          ? tradePreview.size
+          ? tradePreview1.size
+              .toBN()
               .mul(marketPrice.value)
               .div(order.inputCollateralAmount)
               .abs()
