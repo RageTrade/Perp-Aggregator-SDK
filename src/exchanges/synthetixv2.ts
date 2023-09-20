@@ -437,6 +437,9 @@ export default class SynthetixV2Service implements IExchange {
       }
     );
 
+    logObject("tradePreview", tradePreview);
+    logObject("tradePreview1", tradePreview1);
+
     return {
       indexOrIdentifier: "",
       size: tradePreview1.size.toBN().abs(),

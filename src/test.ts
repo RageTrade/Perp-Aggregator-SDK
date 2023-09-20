@@ -83,7 +83,7 @@ async function getTradePreview(
       mode: "ASYNC",
       longCollateral: [],
       shortCollateral: [],
-      indexOrIdentifier: "sETHPERP",
+      indexOrIdentifier: "sBTCPERP",
       supportedOrderTypes: {
         LIMIT_DECREASE: true,
         LIMIT_INCREASE: true,
@@ -290,25 +290,25 @@ async function withdrawAllMargin(ethMarket: FuturesMarket) {
   logObject("Withdraw all margin: ", withdrawAllMargin);
 }
 
-async function closePosition(ethMarket: FuturesMarket) {
-  try {
-    await cancelDelayedOrder(ethMarket!);
-  } catch (e) {
-    console.log("Error cancelling delayed order: ", e);
-  }
+// async function closePosition(ethMarket: FuturesMarket) {
+//   try {
+//     await cancelDelayedOrder(ethMarket!);
+//   } catch (e) {
+//     console.log("Error cancelling delayed order: ", e);
+//   }
 
-  const currentPosition = (await getFuturePositions(ethMarket!))[0];
-  const sizeInEther = currentPosition.position!.size!.neg().toString();
-  const itp = await isolatedTradePreview(ethMarket, sizeInEther);
-  console.log(
-    "itp.price: ",
-    itp.price.toString(),
-    "sizeInEther: ",
-    sizeInEther
-  );
-  // TODO - need to check how to get better desired price
-  await submitOrder(ethMarket!, wei(0), "-0.025");
-}
+//   const currentPosition = (await getFuturePositions(ethMarket!))[0];
+//   const sizeInEther = currentPosition.position!.size!.neg().toString();
+//   const itp = await isolatedTradePreview(ethMarket, sizeInEther);
+//   console.log(
+//     "itp.price: ",
+//     itp.price.toString(),
+//     "sizeInEther: ",
+//     sizeInEther
+//   );
+//   // TODO - need to check how to get better desired price
+//   await submitOrder(ethMarket!, wei(0), "-0.025");
+// }
 
 async function cancelDelayedOrder(ethMarket: FuturesMarket) {
   const cancelDelayedOrder = await sdk.futures.cancelDelayedOrder(
@@ -332,39 +332,39 @@ async function transferMargin(ethMarket: FuturesMarket, amount: string) {
   logObject("Transfer margin: ", transferMargin);
 }
 
-async function isolatedTradePreview(
-  ethMarket: FuturesMarket,
-  sizeInEther: string
-): Promise<{
-  fee: Wei;
-  liqPrice: Wei;
-  margin: Wei;
-  price: Wei;
-  size: Wei;
-  sizeDelta: Wei;
-  side: PositionSide;
-  leverage: Wei;
-  notionalValue: Wei;
-  status: number;
-  showStatus: boolean;
-  statusMessage: string;
-  priceImpact: Wei;
-  exceedsPriceProtection: boolean;
-}> {
-  const isolatedTradePreview = await sdk.futures.getIsolatedTradePreview(
-    ethMarket?.market!,
-    ethMarket?.marketKey!,
-    ContractOrderType.DELAYED_OFFCHAIN,
-    {
-      sizeDelta: wei(ethers.utils.parseEther(sizeInEther)),
-      price: wei("0"),
-      leverageSide: PositionSide.LONG,
-    }
-  );
-  logObject("Isolated trade preview: ", isolatedTradePreview);
+// async function isolatedTradePreview(
+//   ethMarket: FuturesMarket,
+//   sizeInEther: string
+// ): Promise<{
+//   fee: Wei;
+//   liqPrice: Wei;
+//   margin: Wei;
+//   price: Wei;
+//   size: Wei;
+//   sizeDelta: Wei;
+//   side: PositionSide;
+//   leverage: Wei;
+//   notionalValue: Wei;
+//   status: number;
+//   showStatus: boolean;
+//   statusMessage: string;
+//   priceImpact: Wei;
+//   exceedsPriceProtection: boolean;
+// }> {
+//   const isolatedTradePreview = await sdk.futures.getIsolatedTradePreview(
+//     ethMarket?.market!,
+//     ethMarket?.marketKey!,
+//     ContractOrderType.DELAYED_OFFCHAIN,
+//     {
+//       sizeDelta: wei(ethers.utils.parseEther(sizeInEther)),
+//       price: wei("0"),
+//       leverageSide: PositionSide.LONG,
+//     }
+//   );
+//   logObject("Isolated trade preview: ", isolatedTradePreview);
 
-  return isolatedTradePreview;
-}
+//   return isolatedTradePreview;
+// }
 
 async function submitOrder(
   ethMarket: FuturesMarket,
@@ -487,20 +487,31 @@ async function synService() {
     (m) => m.indexOrIdentifier == "sBTCPERP"
   )!;
 
-  for (let i = 0; i < 100; i++) {
-    await delay(1000);
-    const markPrice = await ss.getMarketPrice(btcMarket);
-    const fillPrice = await ss.getFillPriceInternal(
-      btcMarket.address!,
-      wei("0")
-    );
-    console.log(
-      "Mark price: ",
-      markPrice.value,
-      "\nFill price: ",
-      fillPrice.toString()
-    );
-  }
+  const tradePreview = await getTradePreview(
+    "0xd344b73Ac42e34bC8009d522657adE4346B72c9D",
+    ss,
+    "0.003684582113916656",
+    "50",
+    "LONG",
+    ethers.utils.parseUnits("1650.187897946949", 18),
+    "0x59b007E9ea8F89b069c43F8f45834d30853e3699"
+  );
+  logObject("Trade Preview: ", tradePreview);
+
+  // for (let i = 0; i < 100; i++) {
+  //   await delay(1000);
+  //   const markPrice = await ss.getMarketPrice(btcMarket);
+  //   const fillPrice = await ss.getFillPriceInternal(
+  //     btcMarket.address!,
+  //     wei("0")
+  //   );
+  //   console.log(
+  //     "Mark price: ",
+  //     markPrice.value,
+  //     "\nFill price: ",
+  //     fillPrice.toString()
+  //   );
+  // }
 
   // (await sdk.futures.getMarkets()).forEach(async (market) => {
   //   let price = await sdk.futures.getAssetPrice(market.market);
