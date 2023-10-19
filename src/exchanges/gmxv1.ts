@@ -1,4 +1,4 @@
-import { UnsignedTransaction, BigNumberish, ethers, BigNumber } from "ethers";
+import { UnsignedTransaction, BigNumberish, ethers, BigNumber, FixedNumber } from "ethers";
 import {
   CollateralData,
   DynamicMarketMetadata,
@@ -9,7 +9,6 @@ import {
   Market,
   MarketIdentifier,
   Network,
-  NumberDecimal,
   OpenMarkets,
   Order,
   Position,
@@ -263,29 +262,31 @@ export default class GmxV1Service implements IExchange {
         asset: indexToken.symbol,
         indexOrIdentifier: this.getTokenAddress(indexToken),
         marketToken: indexToken,
-        minLeverage: toNumberDecimal(parseUnits("1.1", 4), 4),
-        maxLeverage: toNumberDecimal(parseUnits("50", 4), 4),
-        minInitialMargin: toNumberDecimal(BigNumber.from("0"), 30),
+        minLeverage: FixedNumber.fromValue(parseUnits("1.1", 4), 4),
+        maxLeverage: FixedNumber.fromValue(parseUnits("50", 4), 4),
+        minInitialMargin: FixedNumber.fromValue(BigNumber.from("0"), 30),
         protocolName: this.protocolIdentifier,
-        minPositionSize: toNumberDecimal(parseUnits("10", 30), 30),
+        minPositionSize: FixedNumber.fromValue(parseUnits("10", 30), 30),
       });
     });
+
+    FixedNumber.from("0.1");
 
     return markets;
   }
 
-  async getMarketPrice(market: ExtendedMarket): Promise<NumberDecimal> {
+  async getMarketPrice(market: ExtendedMarket): Promise<FixedNumber> {
     const indexPricesUrl = getServerUrl(ARBITRUM, "/prices");
     const response = await fetch(indexPricesUrl);
     const jsonResponse = await response.json();
     // console.dir(jsonResponse, { depth: 10 });
 
     const indexPrice = jsonResponse[market.indexOrIdentifier];
-
-    return {
-      value: bigNumberify(indexPrice)!.toString(),
-      decimals: USD_DECIMALS,
-    };
+    const indexPriceBigNumber = bigNumberify(indexPrice);
+    if(!indexPriceBigNumber) return FixedNumber.fromValue(BigNumber.from(0), USD_DECIMALS);
+    return FixedNumber.fromValue(indexPriceBigNumber,
+       USD_DECIMALS
+    );
   }
 
   async getMarketPriceByIndexAddress(indexAddr: string): Promise<BigNumber> {

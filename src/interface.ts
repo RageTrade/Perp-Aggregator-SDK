@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish, UnsignedTransaction, ethers } from "ethers";
+import { BigNumber, BigNumberish, UnsignedTransaction, FixedNumber, ethers } from "ethers";
 import {
   AddressValidationAdditionalSessionData,
   ERC20ApprovalAddtionalSessionData,
@@ -62,18 +62,18 @@ export type Market = {
   supportedOrderActions?: Record<OrderAction["orderAction"], Boolean>;
 } & MarketIdentifier;
 
-export type NumberDecimal = {
+export type FixedNumber = {
   value: string;
   decimals: number;
 };
 
 export type StaticMarketMetadata = {
-  maxLeverage?: NumberDecimal;
+  maxLeverage?: FixedNumber;
   address?: string;
   asset?: string;
-  minInitialMargin?: NumberDecimal;
-  minPositionSize?: NumberDecimal;
-  minLeverage?: NumberDecimal;
+  minInitialMargin?: FixedNumber;
+  minPositionSize?: FixedNumber;
+  minLeverage?: FixedNumber;
 };
 
 export type DynamicMarketMetadata = {
@@ -120,7 +120,7 @@ export type ExtendedPosition = Position & {
   fee?: BigNumber;
   leverage?: BigNumber;
   status?: number;
-  priceImpact?: NumberDecimal;
+  priceImpact?: FixedNumber;
   exceedsPriceProtection?: boolean;
   sizeDelta?: BigNumber;
   skewAdjustedPrice?: BigNumber;
@@ -167,7 +167,7 @@ export type LiquidationHistory = {
   realisedPnl: BigNumber;
   liquidationFees: BigNumber;
   remainingCollateral: BigNumber;
-  liqudationLeverage: NumberDecimal;
+  liqudationLeverage: FixedNumber;
   timestamp: number;
   txHash?: string;
 };
@@ -327,7 +327,7 @@ export interface IExchange {
     transferToken: Token | undefined
   ): Promise<UnsignedTxWithMetadata[]>;
 
-  getMarketPrice(market: ExtendedMarket): Promise<NumberDecimal | null>;
+  getMarketPrice(market: ExtendedMarket): Promise<FixedNumber | null>;
 
   getDynamicMetadata(
     market: ExtendedMarket,
