@@ -1,4 +1,4 @@
-import { UnsignedTransaction, BigNumberish, ethers, BigNumber, FixedNumber } from "ethers";
+import { UnsignedTransaction, BigNumberish, BigNumber, ethers } from "ethers";
 import {
   CollateralData,
   DynamicMarketMetadata,
@@ -56,6 +56,7 @@ import {
   getEditCollateralPreviewInternal,
   GToken,
   checkTradePathLiquidiytInternal,
+  DUST_USD,
 } from "../configs/gmx/tokens";
 import {
   applySlippage,
@@ -65,9 +66,10 @@ import {
 } from "../common/helper";
 import { timer } from "execution-time-decorators";
 import { parseUnits } from "ethers/lib/utils";
+import { FixedNumber } from "ethers-v6";
 
 // taken from contract Vault.sol
-const LIQUIDATION_FEE_USD = BigNumber.from("5000000000000000000000000000000");
+const LIQUIDATION_FEE_USD = FixedNumber.fromValue("5000000000000000000000000000000", 30, 'fixed128x30');
 
 export default class GmxV1Service implements IExchange {
   private REFERRAL_CODE =
@@ -130,21 +132,21 @@ export default class GmxV1Service implements IExchange {
       provider,
       ARBITRUM,
       false,
-      [BigNumber.from(0)],
+      [BigNumber.from('0')],
       fundingRateInfo
     );
 
     const info = infoTokens[market.marketToken?.address!];
 
     return {
-      oiLongUsd: info.guaranteedUsd!,
-      oiShortUsd: info.globalShortSize!,
-      fundingRate: BigNumber.from(0),
-      borrowRate: fundingRateInfo[0],
-      availableLiquidityLongUSD: info.maxAvailableLong,
-      availableLiquidityShortUSD: info.maxAvailableShort,
-      marketLimitUsd: BigNumber.from(0),
-      marketLimitNative: BigNumber.from(0),
+      oiLongUsd: FixedNumber.fromValue(info.guaranteedUsd!.toString().toString(), 30, 'fixed128x30'),
+      oiShortUsd: FixedNumber.fromValue(info.globalShortSize!.toString().toString(), 30, 'fixed128x30'),
+      fundingRate: FixedNumber.fromValue('0'.toString(), 30, 'fixed128x30'),
+      borrowRate: FixedNumber.fromValue(fundingRateInfo[0].toString().toString(), 30, 'fixed128x30'),
+      availableLiquidityLongUSD: FixedNumber.fromValue(info.maxAvailableLong!.toString().toString(), 30, 'fixed128x30'),
+      availableLiquidityShortUSD: FixedNumber.fromValue(info.maxAvailableShort!.toString().toString(), 30, 'fixed128x30'),
+      marketLimitUsd: FixedNumber.fromValue('0'.toString(), 30, 'fixed128x30'),
+      marketLimitNative: FixedNumber.fromValue('0'.toString(), 30, 'fixed128x30'),
     };
   }
 
@@ -209,14 +211,14 @@ export default class GmxV1Service implements IExchange {
   async getApproveRouterSpendTx(
     tokenAddress: string,
     provider: Provider,
-    allowanceAmount: BigNumber
+    allowanceAmount: FixedNumber
   ): Promise<UnsignedTxWithMetadata | undefined> {
     let token = IERC20__factory.connect(tokenAddress, provider);
     const router = getContract(ARBITRUM, "Router")!;
 
     let allowance = await token.allowance(this.swAddr, router);
 
-    if (allowance.lt(allowanceAmount)) {
+    if (allowance.lt(allowanceAmount.value)) {
       let tx = await token.populateTransaction.approve(
         router,
         ethers.constants.MaxUint256
@@ -262,16 +264,13 @@ export default class GmxV1Service implements IExchange {
         asset: indexToken.symbol,
         indexOrIdentifier: this.getTokenAddress(indexToken),
         marketToken: indexToken,
-        minLeverage: FixedNumber.fromValue(parseUnits("1.1", 4), 4),
-        maxLeverage: FixedNumber.fromValue(parseUnits("50", 4), 4),
-        minInitialMargin: FixedNumber.fromValue(BigNumber.from("0"), 30),
+        minLeverage: FixedNumber.fromString("1.1", 4),
+        maxLeverage: FixedNumber.fromString("50", 4),
+        minInitialMargin: FixedNumber.fromString("0", 30),
         protocolName: this.protocolIdentifier,
-        minPositionSize: FixedNumber.fromValue(parseUnits("10", 30), 30),
+        minPositionSize: FixedNumber.fromString("10", 30),
       });
     });
-
-    FixedNumber.from("0.1");
-
     return markets;
   }
 
@@ -283,13 +282,13 @@ export default class GmxV1Service implements IExchange {
 
     const indexPrice = jsonResponse[market.indexOrIdentifier];
     const indexPriceBigNumber = bigNumberify(indexPrice);
-    if(!indexPriceBigNumber) return FixedNumber.fromValue(BigNumber.from(0), USD_DECIMALS);
-    return FixedNumber.fromValue(indexPriceBigNumber,
-       USD_DECIMALS
+    if (!indexPriceBigNumber) return FixedNumber.fromString('0', USD_DECIMALS);
+    return FixedNumber.fromString(indexPriceBigNumber.toString(),
+      USD_DECIMALS
     );
   }
 
-  async getMarketPriceByIndexAddress(indexAddr: string): Promise<BigNumber> {
+  async getMarketPriceByIndexAddress(indexAddr: string): Promise<FixedNumber> {
     const indexPricesUrl = getServerUrl(ARBITRUM, "/prices");
     const response = await fetch(indexPricesUrl);
     const jsonResponse = await response.json();
@@ -297,7 +296,7 @@ export default class GmxV1Service implements IExchange {
 
     const indexPrice = jsonResponse[indexAddr];
 
-    return bigNumberify(indexPrice)!;
+    return FixedNumber.fromString(bigNumberify(indexPrice)!.div(DUST_USD).toString(), USD_DECIMALS);
   }
 
   async createOrder(
@@ -339,22 +338,22 @@ export default class GmxV1Service implements IExchange {
 
       createOrderTx = await orderBook.populateTransaction.createIncreaseOrder(
         path,
-        order.inputCollateralAmount,
+        order.inputCollateralAmount.value,
         market.indexOrIdentifier,
         0,
-        order.sizeDelta,
+        order.sizeDelta.value,
         market.indexOrIdentifier,
         order.direction == "LONG" ? true : false,
-        order.trigger?.triggerPrice!,
+        order.trigger?.triggerPrice!.value!,
         !(order.direction == "LONG"),
         this.EXECUTION_FEE,
         order.inputCollateral.address == ethers.constants.AddressZero,
         {
           value:
             order.inputCollateral.address == ethers.constants.AddressZero
-              ? BigNumber.from(this.EXECUTION_FEE).add(
-                  order.inputCollateralAmount
-                )
+              ? this.EXECUTION_FEE.add(
+                order.inputCollateralAmount.value
+              )
               : this.EXECUTION_FEE,
         }
       );
@@ -379,20 +378,20 @@ export default class GmxV1Service implements IExchange {
       const acceptablePrice =
         order.slippage && order.slippage != ""
           ? applySlippage(
-              order.trigger?.triggerPrice!,
-              order.slippage,
-              order.direction == "LONG"
-            )
-          : order.trigger?.triggerPrice!;
+            BigNumber.from(order.trigger?.triggerPrice!.value),
+            order.slippage,
+            order.direction == "LONG"
+          )
+          : order.trigger?.triggerPrice!.value!;
 
       if (order.inputCollateral.address != ethers.constants.AddressZero) {
         createOrderTx =
           await positionRouter.populateTransaction.createIncreasePosition(
             path,
             market.indexOrIdentifier,
-            order.inputCollateralAmount,
+            order.inputCollateralAmount.value,
             0,
-            order.sizeDelta,
+            order.sizeDelta.value,
             order.direction == "LONG" ? true : false,
             acceptablePrice,
             this.EXECUTION_FEE,
@@ -408,15 +407,15 @@ export default class GmxV1Service implements IExchange {
             path,
             market.indexOrIdentifier,
             0,
-            order.sizeDelta,
+            order.sizeDelta.value,
             order.direction == "LONG" ? true : false,
             acceptablePrice,
             this.EXECUTION_FEE,
             ethers.constants.HashZero, // Referral code set during setup()
             ethers.constants.AddressZero,
             {
-              value: BigNumber.from(this.EXECUTION_FEE).add(
-                order.inputCollateralAmount
+              value: this.EXECUTION_FEE.add(
+                order.inputCollateralAmount.value
               ),
             }
           );
@@ -448,16 +447,16 @@ export default class GmxV1Service implements IExchange {
     if (updatedOrder.type! == "LIMIT_INCREASE") {
       updateOrderTx = await orderBook.populateTransaction.updateIncreaseOrder(
         updatedOrder.orderIdentifier!,
-        updatedOrder.sizeDelta!,
-        updatedOrder.trigger?.triggerPrice!,
+        updatedOrder.sizeDelta!.value,
+        updatedOrder.trigger?.triggerPrice!.value!,
         updatedOrder.trigger?.triggerAboveThreshold!
       );
     } else if (updatedOrder.type! == "LIMIT_DECREASE") {
       updateOrderTx = await orderBook.populateTransaction.updateDecreaseOrder(
         updatedOrder.orderIdentifier!,
-        updatedOrder.inputCollateralAmount!,
-        updatedOrder.sizeDelta!,
-        updatedOrder.trigger?.triggerPrice!,
+        updatedOrder.inputCollateralAmount!.value,
+        updatedOrder.sizeDelta!.value,
+        updatedOrder.trigger?.triggerPrice!.value!,
         updatedOrder.trigger?.triggerAboveThreshold!
       );
     } else {
@@ -521,12 +520,12 @@ export default class GmxV1Service implements IExchange {
         collateralToken = this.convertToToken(
           getToken(ARBITRUM, order.purchaseToken)
         );
-        collateralAmount = order.purchaseTokenAmount as BigNumber;
+        collateralAmount = order.purchaseTokenAmount as FixedNumber;
       } else {
         collateralToken = this.convertToToken(
           getToken(ARBITRUM, order.collateralToken)
         );
-        collateralAmount = order.collateralDelta as BigNumber;
+        collateralAmount = order.collateralDelta as FixedNumber;
       }
 
       let isTp = false;
@@ -549,11 +548,11 @@ export default class GmxV1Service implements IExchange {
         orderIdentifier: order.index as number,
         type: order.type == "Increase" ? "LIMIT_INCREASE" : "LIMIT_DECREASE",
         direction: order.isLong ? "LONG" : "SHORT",
-        sizeDelta: order.sizeDelta as BigNumber,
+        sizeDelta: order.sizeDelta as FixedNumber,
         referralCode: undefined,
         isTriggerOrder: order.type == "Decrease",
         trigger: {
-          triggerPrice: order.triggerPrice as BigNumber,
+          triggerPrice: order.triggerPrice as FixedNumber,
           triggerAboveThreshold: order.triggerAboveThreshold as boolean,
         },
         slippage: undefined,
@@ -686,7 +685,7 @@ export default class GmxV1Service implements IExchange {
     let extPositions: ExtendedPosition[] = [];
 
     for (const pos of positions) {
-      const maxAmount: BigNumber = pos.collateralAfterFee
+      const maxAmount: FixedNumber = pos.collateralAfterFee
         .sub(MIN_ORDER_USD)
         .gt(0)
         ? pos.collateralAfterFee.sub(MIN_ORDER_USD)
@@ -712,7 +711,7 @@ export default class GmxV1Service implements IExchange {
           fundingFee: pos.fundingFee,
         }),
         fee: pos.totalFees,
-        accessibleMargin: maxAmount,
+        accessibleMargin: BigNumber.from(maxAmount.value),
         leverage: pos.leverage,
         exceedsPriceProtection: pos.hasLowCollateral,
         direction: pos.isLong ? "LONG" : "SHORT",
@@ -753,7 +752,7 @@ export default class GmxV1Service implements IExchange {
   async updatePositionMargin(
     provider: Provider,
     position: ExtendedPosition,
-    marginAmount: BigNumber, // For deposit it's in token terms and for withdraw it's in USD terms (F/E)
+    marginAmount: FixedNumber, // For deposit it's in token terms and for withdraw it's in USD terms (F/E)
     isDeposit: boolean,
     transferToken: Token
   ): Promise<UnsignedTxWithMetadata[]> {
@@ -785,8 +784,8 @@ export default class GmxV1Service implements IExchange {
 
       fillPrice =
         position.direction == "LONG"
-          ? fillPrice.mul(101).div(100)
-          : fillPrice.mul(99).div(100);
+          ? fillPrice.mul(FixedNumber.fromString('1.01', fillPrice.decimals))
+          : fillPrice.mul(FixedNumber.fromString('0.99', fillPrice.decimals));
 
       if (transferTokenString !== position.collateralToken.address) {
         path.push(transferTokenString, position.collateralToken.address);
@@ -800,14 +799,14 @@ export default class GmxV1Service implements IExchange {
             path,
             indexAddress,
             0,
-            BigNumber.from(0),
+            0,
             position.direction == "LONG" ? true : false,
-            fillPrice,
+            fillPrice.value,
             this.EXECUTION_FEE,
             ethers.constants.HashZero, // Referral code set during setup()
             ethers.constants.AddressZero,
             {
-              value: BigNumber.from(this.EXECUTION_FEE).add(marginAmount),
+              value: this.EXECUTION_FEE.add(marginAmount.value),
             }
           );
       } else {
@@ -815,16 +814,16 @@ export default class GmxV1Service implements IExchange {
           await positionRouter.populateTransaction.createIncreasePosition(
             path,
             indexAddress,
-            marginAmount,
+            marginAmount.value,
             0,
-            BigNumber.from(0),
+            0,
             position.direction == "LONG" ? true : false,
-            fillPrice,
+            fillPrice.value,
             this.EXECUTION_FEE,
             ethers.constants.HashZero, // Referral code set during setup()
             ethers.constants.AddressZero,
             {
-              value: BigNumber.from(this.EXECUTION_FEE),
+              value: this.EXECUTION_FEE,
             }
           );
       }
@@ -836,18 +835,18 @@ export default class GmxV1Service implements IExchange {
 
       fillPrice =
         position.direction == "LONG"
-          ? fillPrice.mul(99).div(100)
-          : fillPrice.mul(101).div(100);
+          ? fillPrice.mul(FixedNumber.fromString('0.99', fillPrice.decimals))
+          : fillPrice.mul(FixedNumber.fromString('1.01', fillPrice.decimals));
 
       marginTx =
         await positionRouter.populateTransaction.createDecreasePosition(
           path,
           indexAddress,
-          marginAmount,
-          BigNumber.from(0),
+          marginAmount.value,
+          0,
           position.direction == "LONG" ? true : false,
           this.swAddr,
-          fillPrice,
+          fillPrice.value,
           0,
           this.EXECUTION_FEE,
           transferToken.address == ethers.constants.AddressZero,
@@ -871,9 +870,9 @@ export default class GmxV1Service implements IExchange {
   async closePosition(
     provider: Provider,
     position: ExtendedPosition,
-    closeSize: BigNumber,
+    closeSize: FixedNumber,
     isTrigger: boolean,
-    triggerPrice: BigNumber | undefined,
+    triggerPrice: FixedNumber | undefined,
     triggerAboveThreshold: boolean | undefined,
     outputToken: Token | undefined
   ): Promise<UnsignedTxWithMetadata[]> {
@@ -883,7 +882,7 @@ export default class GmxV1Service implements IExchange {
     );
 
     if (!isTrigger) {
-      let remainingSize = position.size.sub(closeSize);
+      let remainingSize = position.size.sub(closeSize.value);
 
       // close all related tp/sl orders if order.sizeDelta > remaining size
       const orders = (
@@ -895,7 +894,7 @@ export default class GmxV1Service implements IExchange {
         )
       ).filter(
         (order) =>
-          order.triggerType != "NONE" && order.sizeDelta > remainingSize
+          order.triggerType != "NONE" && BigNumber.from(order.sizeDelta.value) > remainingSize
       );
       for (const order of orders) {
         const cancelOrderTx = await this.cancelOrder(
@@ -915,8 +914,8 @@ export default class GmxV1Service implements IExchange {
 
       fillPrice =
         position.direction == "LONG"
-          ? fillPrice.mul(99).div(100)
-          : fillPrice.mul(101).div(100);
+          ? fillPrice.mul(FixedNumber.fromString('0.99', fillPrice.decimals))
+          : fillPrice.mul(FixedNumber.fromString('1.01', fillPrice.decimals));
 
       const positionRouter = PositionRouter__factory.connect(
         getContract(ARBITRUM, "PositionRouter")!,
@@ -933,11 +932,11 @@ export default class GmxV1Service implements IExchange {
         await positionRouter.populateTransaction.createDecreasePosition(
           path,
           indexAddress,
-          BigNumber.from(0),
-          closeSize,
+          0,
+          closeSize.value,
           position.direction! == "LONG" ? true : false,
           this.swAddr,
-          fillPrice,
+          fillPrice.value,
           0,
           this.EXECUTION_FEE,
           collateralOutAddr == ethers.constants.AddressZero,
@@ -961,11 +960,11 @@ export default class GmxV1Service implements IExchange {
       let createOrderTx =
         await orderBook.populateTransaction.createDecreaseOrder(
           indexAddress,
-          closeSize,
+          closeSize.value,
           position.originalCollateralToken!,
-          BigNumber.from(0), // in USD e30
+          0, // in USD e30
           position.direction == "LONG" ? true : false,
-          triggerPrice!,
+          triggerPrice!.value,
           triggerAboveThreshold!,
           {
             value: this.EXECUTION_FEE,
@@ -1101,7 +1100,7 @@ export default class GmxV1Service implements IExchange {
 
           for (const update of updateList) {
             if ((update.id as string).split(":")[2] == txHash) {
-              realisedPnl = BigNumber.from(update.realisedPnl);
+              realisedPnl = FixedNumber.fromValue(update.realisedPnl.toString(), 30, 'fixed128x30');
               break;
             }
           }
@@ -1112,12 +1111,12 @@ export default class GmxV1Service implements IExchange {
               getToken(ARBITRUM, incTrade.collateralToken)
             ),
             direction: incTrade.isLong ? "LONG" : "SHORT",
-            sizeDelta: BigNumber.from(incTrade.sizeDelta),
-            price: BigNumber.from(incTrade.price),
-            collateralDelta: BigNumber.from(incTrade.collateralDelta),
+            sizeDelta: FixedNumber.fromValue(incTrade.sizeDelta.toString(), 30, 'fixed128x30'),
+            price: FixedNumber.fromValue(incTrade.price.toString(), 30, 'fixed128x30'),
+            collateralDelta: FixedNumber.fromValue(incTrade.collateralDelta.toString(), 30, 'fixed128x30'),
             realisedPnl: realisedPnl,
-            keeperFeesPaid: BigNumber.from(0),
-            positionFee: BigNumber.from(incTrade.fee), // does not include keeper fee
+            keeperFeesPaid: FixedNumber.fromValue('0'.toString(), 30, 'fixed128x30'),
+            positionFee: FixedNumber.fromValue(incTrade.fee.toString(), 30, 'fixed128x30'), // does not include keeper fee
             txHash: txHash,
             timestamp: incTrade.timestamp as number,
             operation: incTrade.isLong ? "Open Long" : "Open Short",
@@ -1132,13 +1131,13 @@ export default class GmxV1Service implements IExchange {
 
           for (const update of updateList) {
             if ((update.id as string).split(":")[2] == txHash) {
-              realisedPnl = BigNumber.from(update.realisedPnl);
+              realisedPnl = FixedNumber.fromValue(update.realisedPnl.toString(), 30, 'fixed128x30');
               break;
             }
           }
           if (!!closedPosition) {
             if ((closedPosition.id as string).split(":")[2] == txHash) {
-              realisedPnl = BigNumber.from(closedPosition.realisedPnl);
+              realisedPnl = FixedNumber.fromValue(closedPosition.realisedPnl.toString(), 30, 'fixed128x30');
               break;
             }
           }
@@ -1149,12 +1148,12 @@ export default class GmxV1Service implements IExchange {
               getToken(ARBITRUM, decTrade.collateralToken)
             ),
             direction: decTrade.isLong ? "LONG" : "SHORT",
-            sizeDelta: BigNumber.from(decTrade.sizeDelta),
-            price: BigNumber.from(decTrade.price),
-            collateralDelta: BigNumber.from(decTrade.collateralDelta),
+            sizeDelta: FixedNumber.fromValue(decTrade.sizeDelta.toString(), 30, 'fixed128x30'),
+            price: FixedNumber.fromValue(decTrade.price.toString(), 30, 'fixed128x30'),
+            collateralDelta: FixedNumber.fromValue(decTrade.collateralDelta.toString(), 30, 'fixed128x30'),
             realisedPnl: realisedPnl,
-            keeperFeesPaid: BigNumber.from(0), // ether terms
-            positionFee: BigNumber.from(decTrade.fee), // does not include keeper fee
+            keeperFeesPaid: FixedNumber.fromValue('0'.toString(), 30, 'fixed128x30'), // ether terms
+            positionFee: FixedNumber.fromValue(decTrade.fee.toString(), 30, 'fixed128x30'), // does not include keeper fee
             txHash: txHash,
             timestamp: decTrade.timestamp as number,
             operation: decTrade.isLong ? "Close Long" : "Close Short",
@@ -1201,10 +1200,10 @@ export default class GmxV1Service implements IExchange {
         );
         const PRECISION = BigNumber.from(10).pow(30);
 
-        each.keeperFeesPaid = this.EXECUTION_FEE.mul(PRECISION)
+        each.keeperFeesPaid = FixedNumber.fromString(this.EXECUTION_FEE.mul(PRECISION)
           .mul(etherPrice)
           .div(ethers.constants.WeiPerEther)
-          .div(ethers.constants.WeiPerEther);
+          .div(ethers.constants.WeiPerEther).toString(), 30);
       }
     } catch (e) {
       console.log("<Gmx trade history> Error fetching price data: ", e);
@@ -1254,17 +1253,14 @@ export default class GmxV1Service implements IExchange {
         collateralToken: this.convertToToken(
           getToken(ARBITRUM, each.collateralToken)
         ),
-        liquidationPrice: BigNumber.from(each.markPrice),
-        sizeClosed: BigNumber.from(each.size),
+        liquidationPrice: FixedNumber.fromValue(each.markPrice.toString(), 30, 'fixed128x30'),
+        sizeClosed: FixedNumber.fromValue(each.size.toString(), 30, 'fixed128x30'),
         direction: each.isLong ? "LONG" : "SHORT",
-        realisedPnl: BigNumber.from(each.collateral).mul(-1),
-        liquidationFees: BigNumber.from(LIQUIDATION_FEE_USD),
-        remainingCollateral: BigNumber.from(0),
+        realisedPnl: FixedNumber.fromValue(each.collateral.mul(-1).toString().toString(), 30, 'fixed128x30'),
+        liquidationFees: LIQUIDATION_FEE_USD,
+        remainingCollateral: FixedNumber.fromValue('0'.toString(), 30, 'fixed128x30'),
         //100x
-        liqudationLeverage: {
-          value: "100000000",
-          decimals: 6,
-        },
+        liqudationLeverage: FixedNumber.fromValue("100000000", 6, 'fixed128x6'),
         timestamp: each.timestamp,
       });
     }
@@ -1309,7 +1305,7 @@ export default class GmxV1Service implements IExchange {
       this.getMarketPrice,
       this.convertToToken,
       order,
-      BigNumber.from(this.EXECUTION_FEE),
+      this.EXECUTION_FEE,
       existingPosition
     );
   }
@@ -1318,19 +1314,19 @@ export default class GmxV1Service implements IExchange {
     user: string,
     provider: Provider,
     position: ExtendedPosition,
-    closeSize: BigNumber,
+    closeSize: FixedNumber,
     isTrigger: boolean,
-    triggerPrice: BigNumber | undefined,
+    triggerPrice: FixedNumber | undefined,
     triggerAboveThreshold: boolean | undefined,
     outputToken: Token | undefined
   ): Promise<ExtendedPosition> {
     return await getCloseTradePreviewInternal(
       provider,
       position,
-      closeSize,
-      BigNumber.from(this.EXECUTION_FEE),
+      BigNumber.from(closeSize.value),
+      this.EXECUTION_FEE,
       isTrigger,
-      triggerPrice,
+      BigNumber.from(triggerPrice!.value),
       outputToken ? this.convertToGToken(outputToken) : undefined,
       this.convertToToken
     );
@@ -1340,16 +1336,16 @@ export default class GmxV1Service implements IExchange {
     user: string,
     provider: Provider,
     position: ExtendedPosition,
-    marginDelta: ethers.BigNumber,
+    marginDelta: FixedNumber,
     isDeposit: boolean
   ): Promise<ExtendedPosition> {
     return await getEditCollateralPreviewInternal(
       provider,
       position,
-      marginDelta,
+      BigNumber.from(marginDelta.value),
       isDeposit,
       this.convertToToken,
-      BigNumber.from(this.EXECUTION_FEE)
+      this.EXECUTION_FEE
     );
   }
 
@@ -1544,7 +1540,7 @@ export default class GmxV1Service implements IExchange {
     };
 
     function _parseOrdersData(
-      ordersData: [ethers.BigNumber[], string[]],
+      ordersData: [BigNumber[], string[]],
       account: string,
       indexes: number[],
       extractor: any,
@@ -1583,7 +1579,7 @@ export default class GmxV1Service implements IExchange {
     }
 
     function parseDecreaseOrdersData(
-      decreaseOrdersData: [ethers.BigNumber[], string[]],
+      decreaseOrdersData: [BigNumber[], string[]],
       account: string,
       indexes: number[]
     ) {
@@ -1592,10 +1588,10 @@ export default class GmxV1Service implements IExchange {
         return {
           collateralToken: sliced[0] as string,
           indexToken: sliced[1] as string,
-          collateralDelta: sliced[2] as BigNumber,
-          sizeDelta: sliced[3] as BigNumber,
+          collateralDelta: sliced[2] as FixedNumber,
+          sizeDelta: sliced[3] as FixedNumber,
           isLong,
-          triggerPrice: sliced[5] as BigNumber,
+          triggerPrice: sliced[5] as FixedNumber,
           triggerAboveThreshold: sliced[6].toString() === "1",
           type: "Decrease",
         };
@@ -1611,7 +1607,7 @@ export default class GmxV1Service implements IExchange {
     }
 
     function parseIncreaseOrdersData(
-      increaseOrdersData: [ethers.BigNumber[], string[]],
+      increaseOrdersData: [BigNumber[], string[]],
       account: string,
       indexes: number[]
     ) {
@@ -1621,10 +1617,10 @@ export default class GmxV1Service implements IExchange {
           purchaseToken: sliced[0] as string,
           collateralToken: sliced[1] as string,
           indexToken: sliced[2] as string,
-          purchaseTokenAmount: sliced[3] as BigNumber,
-          sizeDelta: sliced[4] as BigNumber,
+          purchaseTokenAmount: sliced[3] as FixedNumber,
+          sizeDelta: sliced[4] as FixedNumber,
           isLong,
-          triggerPrice: sliced[6] as BigNumber,
+          triggerPrice: sliced[6] as FixedNumber,
           triggerAboveThreshold: sliced[7].toString() === "1",
           type: "Increase",
         };
@@ -1667,7 +1663,7 @@ export default class GmxV1Service implements IExchange {
 
   async getEthRequired(provider: Provider): Promise<BigNumber | undefined> {
     const ethBalance = await provider.getBalance(this.swAddr);
-    const ethRequired = BigNumber.from(this.EXECUTION_FEE);
+    const ethRequired = this.EXECUTION_FEE;
 
     if (ethBalance.lt(ethRequired)) return ethRequired.sub(ethBalance).add(1);
   }

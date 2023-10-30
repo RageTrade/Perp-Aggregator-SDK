@@ -1,11 +1,9 @@
-import { BigNumber, ethers } from "ethers";
-import { NumberDecimal } from "../../interface";
-
+import { FixedNumber } from "ethers-v6";
 // Assuming you're working in a browser environment that supports fetch and ReadableStream
 const streamingUrl =
   "https://benchmarks.pyth.network/v1/shims/tradingview/streaming";
 
-type PricesMap = Record<string, NumberDecimal | null>;
+type PricesMap = Record<string, FixedNumber | null>;
 
 let prices: PricesMap = {};
 
@@ -19,10 +17,7 @@ function handleStreamingData(data: { id: string; p: number }) {
     // console.log({ id, symbolInfo, symbol, symbolBase, p });
 
     if (symbolBase === "USD") {
-      prices[symbol] = {
-        value: ethers.utils.parseUnits(p.toFixed(18), 30).toString(),
-        decimals: 30,
-      };
+      prices[symbol] = FixedNumber.fromString(p.toFixed(18), 30);
     }
     // console.dir({ prices }, { depth: 2 });
   } catch (e) {
@@ -86,17 +81,7 @@ export function startStreaming(retries = 3, delay = 3000) {
   }
 }
 
-const UnitPrice = {
-  decimals: 30,
-  formatted: "1",
-  value: ethers.utils.parseUnits("1", 30),
-};
-
-export type BigNumDecimals = {
-  decimals: number;
-  formatted: string;
-  value: BigNumber;
-};
+const UnitPrice = FixedNumber.fromString('1',30);
 
 export function getTokenPrice(token: string) {
   if (token === "sUSD") return UnitPrice;
@@ -109,13 +94,9 @@ export function getTokenPrice(token: string) {
   if (!price) return;
 
   const decimals = price.decimals;
-  const value = BigNumber.from(price.value);
+  const value = FixedNumber.fromValue(price.value, decimals);
 
-  return {
-    decimals,
-    value,
-    formatted: ethers.utils.formatUnits(value, decimals),
-  };
+  return value
 }
 
 export function getTokenPriceD(token: string, decimals: number) {
@@ -123,17 +104,7 @@ export function getTokenPriceD(token: string, decimals: number) {
 
   if (!tokenPrice) return null;
 
-  if (tokenPrice.decimals === decimals) {
-    return tokenPrice.value;
-  } else if (tokenPrice.decimals > decimals) {
-    return tokenPrice.value.div(
-      BigNumber.from(10).pow(tokenPrice.decimals - decimals)
-    );
-  } else {
-    return tokenPrice.value.mul(
-      BigNumber.from(10).pow(18 - tokenPrice.decimals)
-    );
-  }
+  return tokenPrice.toFormat(decimals);
 }
 
 startStreaming();

@@ -1,10 +1,12 @@
-import { BigNumber, BigNumberish, UnsignedTransaction, FixedNumber, ethers } from "ethers";
+import { BigNumberish, UnsignedTransaction, BigNumber, providers } from "ethers";
 import {
   AddressValidationAdditionalSessionData,
   ERC20ApprovalAddtionalSessionData,
 } from "./tx-metadata-types";
 
-export type Provider = ethers.providers.Provider;
+import { FixedNumber } from "ethers-v6";
+
+export type Provider = providers.Provider;
 
 export type Mode = "SYNC" | "ASYNC";
 
@@ -62,11 +64,6 @@ export type Market = {
   supportedOrderActions?: Record<OrderAction["orderAction"], Boolean>;
 } & MarketIdentifier;
 
-export type FixedNumber = {
-  value: string;
-  decimals: number;
-};
-
 export type StaticMarketMetadata = {
   maxLeverage?: FixedNumber;
   address?: string;
@@ -77,22 +74,22 @@ export type StaticMarketMetadata = {
 };
 
 export type DynamicMarketMetadata = {
-  price?: BigNumber;
-  oiLong?: BigNumber;
-  oiShort?: BigNumber;
-  oiTotal?: BigNumber;
-  fundingRate?: BigNumber;
-  fundingVelocity?: BigNumber;
-  borrowRate?: BigNumber;
-  makerFee?: BigNumber;
-  takerFee?: BigNumber;
-  availableLiquidity?: BigNumber;
-  availableLiquidityLongUSD?: BigNumber;
-  availableLiquidityShortUSD?: BigNumber;
-  oiLongUsd: BigNumber;
-  oiShortUsd: BigNumber;
-  marketLimitUsd: BigNumber;
-  marketLimitNative: BigNumber;
+  price?: FixedNumber;
+  oiLong?: FixedNumber;
+  oiShort?: FixedNumber;
+  oiTotal?: FixedNumber;
+  fundingRate?: FixedNumber;
+  fundingVelocity?: FixedNumber;
+  borrowRate?: FixedNumber;
+  makerFee?: FixedNumber;
+  takerFee?: FixedNumber;
+  availableLiquidity?: FixedNumber;
+  availableLiquidityLongUSD?: FixedNumber;
+  availableLiquidityShortUSD?: FixedNumber;
+  oiLongUsd: FixedNumber;
+  oiShortUsd: FixedNumber;
+  marketLimitUsd: FixedNumber;
+  marketLimitNative: FixedNumber;
 };
 
 export type ProtocolMetadata = {
@@ -161,12 +158,12 @@ export type Trade = ExtendedPosition & {
 export type LiquidationHistory = {
   marketIdentifier: MarketIdentifier["indexOrIdentifier"];
   collateralToken: Token;
-  liquidationPrice: BigNumber;
-  sizeClosed: BigNumber;
+  liquidationPrice: FixedNumber;
+  sizeClosed: FixedNumber;
   direction: OrderDirection;
-  realisedPnl: BigNumber;
-  liquidationFees: BigNumber;
-  remainingCollateral: BigNumber;
+  realisedPnl: FixedNumber;
+  liquidationFees: FixedNumber;
+  remainingCollateral: FixedNumber;
   liqudationLeverage: FixedNumber;
   timestamp: number;
   txHash?: string;
@@ -176,27 +173,27 @@ export type TradeHistory = {
   marketIdentifier: MarketIdentifier["indexOrIdentifier"];
   collateralToken: Token;
   timestamp: number;
-  // size?: BigNumber; // final Size
-  sizeDelta: BigNumber;
+  // size?: FixedNumber; // final Size
+  sizeDelta: FixedNumber;
   direction: OrderDirection;
-  price: BigNumber;
-  collateralDelta: BigNumber;
-  realisedPnl: BigNumber | undefined;
-  keeperFeesPaid: BigNumber;
-  positionFee: BigNumber;
+  price: FixedNumber;
+  collateralDelta: FixedNumber;
+  realisedPnl: FixedNumber | undefined;
+  keeperFeesPaid: FixedNumber;
+  positionFee: FixedNumber;
   operation:
-    | "Open Long"
-    | "Close Long"
-    | "Open Short"
-    | "Close Short"
-    | "Long"
-    | "Short";
+  | "Open Long"
+  | "Close Long"
+  | "Open Short"
+  | "Close Short"
+  | "Long"
+  | "Short";
   txHash: string;
 };
 
 export type CollateralData = {
   inputCollateral: Token;
-  inputCollateralAmount: BigNumber;
+  inputCollateralAmount: FixedNumber;
   shouldWrap?: boolean;
 };
 
@@ -206,15 +203,15 @@ export type Order = {
   direction: OrderDirection;
 
   // in SNX cannot update size and collateral delta in same call
-  sizeDelta: BigNumber;
+  sizeDelta: FixedNumber;
   isTriggerOrder: Boolean;
   referralCode: string | undefined;
   trigger:
-    | {
-        triggerPrice: BigNumber;
-        triggerAboveThreshold: boolean;
-      }
-    | undefined;
+  | {
+    triggerPrice: FixedNumber;
+    triggerAboveThreshold: boolean;
+  }
+  | undefined;
   slippage: string | undefined;
 } & CollateralData;
 
@@ -237,41 +234,41 @@ export type OpenMarkets = {
 
 export type UnsignedTxWithMetadata =
   | {
-      tx: UnsignedTransaction;
-      type: "ERC20_APPROVAL";
-      data: ERC20ApprovalAddtionalSessionData;
-      ethRequired?: BigNumber;
-    }
+    tx: UnsignedTransaction;
+    type: "ERC20_APPROVAL";
+    data: ERC20ApprovalAddtionalSessionData;
+    ethRequired?: BigNumber;
+  }
   | {
-      tx: UnsignedTransaction;
-      type: "GMX_V1";
-      data: undefined;
-      ethRequired?: BigNumber;
-    }
+    tx: UnsignedTransaction;
+    type: "GMX_V1";
+    data: undefined;
+    ethRequired?: BigNumber;
+  }
   | {
-      tx: UnsignedTransaction;
-      type: "LIFI";
-      data: undefined;
-      ethRequired?: BigNumber;
-    }
+    tx: UnsignedTransaction;
+    type: "LIFI";
+    data: undefined;
+    ethRequired?: BigNumber;
+  }
   | {
-      tx: UnsignedTransaction;
-      type: "SNX_V2";
-      data: undefined;
-      ethRequired?: BigNumber;
-    }
+    tx: UnsignedTransaction;
+    type: "SNX_V2";
+    data: undefined;
+    ethRequired?: BigNumber;
+  }
   | {
-      tx: UnsignedTransaction;
-      type: "NATIVE";
-      data: undefined;
-      ethRequired?: BigNumber;
-    }
+    tx: UnsignedTransaction;
+    type: "NATIVE";
+    data: undefined;
+    ethRequired?: BigNumber;
+  }
   | {
-      tx: UnsignedTransaction;
-      type: "ADDRESS";
-      data: AddressValidationAdditionalSessionData;
-      ethRequired?: BigNumber;
-    };
+    tx: UnsignedTransaction;
+    type: "ADDRESS";
+    data: AddressValidationAdditionalSessionData;
+    ethRequired?: BigNumber;
+  };
 
 export type PaginatedRes<T> = {
   result: T[];
@@ -312,9 +309,9 @@ export interface IExchange {
   closePosition(
     provider: Provider,
     position: ExtendedPosition,
-    closeSize: BigNumber,
+    closeSize: FixedNumber,
     isTrigger: boolean,
-    triggerPrice: BigNumber | undefined,
+    triggerPrice: FixedNumber | undefined,
     triggerAboveThreshold: boolean | undefined,
     outputToken: Token | undefined
   ): Promise<UnsignedTxWithMetadata[]>;
@@ -322,7 +319,7 @@ export interface IExchange {
   updatePositionMargin(
     provider: Provider,
     position: ExtendedPosition,
-    marginAmount: BigNumber,
+    marginAmount: FixedNumber,
     isDeposit: boolean,
     transferToken: Token | undefined
   ): Promise<UnsignedTxWithMetadata[]>;
@@ -403,9 +400,9 @@ export interface IExchange {
     user: string,
     provider: Provider,
     position: ExtendedPosition,
-    closeSize: BigNumber,
+    closeSize: FixedNumber,
     isTrigger: boolean,
-    triggerPrice: BigNumber | undefined,
+    triggerPrice: FixedNumber | undefined,
     triggerAboveThreshold: boolean | undefined,
     outputToken: Token | undefined
   ): Promise<ExtendedPosition>;
@@ -414,7 +411,7 @@ export interface IExchange {
     user: string,
     provider: Provider,
     position: ExtendedPosition,
-    marginDelta: BigNumber,
+    marginDelta: FixedNumber,
     isDeposit: boolean
   ): Promise<ExtendedPosition>;
 }

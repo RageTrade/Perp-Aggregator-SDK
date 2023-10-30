@@ -50,6 +50,7 @@ import { getExplorerUrl } from "../configs/gmx/chains";
 import { timer } from "execution-time-decorators";
 import { formatUnits, parseUnits } from "ethers/lib/utils";
 import { getTokenPrice, getTokenPriceD } from "../configs/pyth/prices";
+import { FixedNumber } from "ethers-v6";
 
 export default class SynthetixV2Service implements IExchange {
   private opChainId = 10;
@@ -179,10 +180,7 @@ export default class SynthetixV2Service implements IExchange {
     const v = getTokenPriceD(market.asset!, 18);
     if (!v) return null;
 
-    return {
-      value: v.toString(),
-      decimals: 18,
-    };
+    return FixedNumber.fromString(v.toString(),18);
   }
 
   async getMarketPriceByAddress(marketAddress: string): Promise<NumberDecimal> {
@@ -200,7 +198,7 @@ export default class SynthetixV2Service implements IExchange {
     order: Order
   ): Promise<UnsignedTxWithMetadata[]> {
     let txs: UnsignedTxWithMetadata[] = [];
-    if (order.sizeDelta.eq(0)) return txs;
+    if (BigNumber.from(order.sizeDelta.value).eq(0)) return txs;
 
     const marketAddress = await this.getMarketAddress(market);
     await this.sdk.setProvider(provider);
@@ -227,7 +225,7 @@ export default class SynthetixV2Service implements IExchange {
     const acceptablePrice =
       order.slippage && order.slippage != ""
         ? applySlippage(
-            order.trigger?.triggerPrice!,
+            BigNumber.from(order.trigger?.triggerPrice!.value),
             order.slippage,
             order.direction == "LONG"
           )
@@ -277,13 +275,13 @@ export default class SynthetixV2Service implements IExchange {
   async closePosition(
     provider: Provider,
     position: ExtendedPosition,
-    closeSize: BigNumber,
+    closeSize: FixedNumber,
     isTrigger: boolean,
-    triggerPrice: BigNumber | undefined,
+    triggerPrice: FixedNumber | undefined,
     triggerAboveThreshold: boolean | undefined,
     outputToken: Token | undefined
   ): Promise<UnsignedTxWithMetadata[]> {
-    if (closeSize.eq(0) || closeSize.gt(position.size)) {
+    if (closeSize.value === BigInt(0) || BigNumber.from(closeSize.value).gt(position.size)) {
       throw new Error("Invalid close size");
     }
 
@@ -324,7 +322,7 @@ export default class SynthetixV2Service implements IExchange {
           decimals: "string",
           address: "string",
         },
-        inputCollateralAmount: BigNumber.from(0),
+        inputCollateralAmount: FixedNumber.fromValue(0,18,'fixed128X18'),
         sizeDelta: closeSize,
         isTriggerOrder: false,
         referralCode: undefined,

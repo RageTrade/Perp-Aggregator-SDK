@@ -37,6 +37,7 @@ import {
   startStreaming,
 } from "./configs/pyth/prices";
 import { Connection } from "@solana/web3.js";
+import { FixedNumber } from "ethers-v6";
 
 config();
 
@@ -200,7 +201,7 @@ async function cancelDelayedOffChainOrder(
 
 async function createTransferMarginOrder(
   ss: SynthetixV2Service,
-  amount: BigNumber
+  amount: FixedNumber
 ): Promise<UnsignedTxWithMetadata[]> {
   const createOrder = await ss.createOrder(
     provider,
@@ -397,7 +398,7 @@ async function getFuturePositions(
 
 async function crossMargin() {
   const markets = await sdk.futures.getMarkets();
-  const ethMarket = markets.find((market) => market.asset === "sETH");
+  const ethMarket = markets.find((market: { asset: string; }) => market.asset === "sETH");
   console.log("Eth market key: ", ethMarket?.marketKey);
 
   const marginAccounts = await sdk.futures.getCrossMarginAccounts(w);
@@ -1130,24 +1131,23 @@ async function testAutoRouter() {
     let margin = scenarios[i].collateralUsd;
     let lev = scenarios[i].lev;
     let sizeDeltaUsd = BigNumber.from(margin).mul(lev);
-    let gmxSizeDelta = ethers.utils.parseUnits(sizeDeltaUsd.toString(), 30);
+    let gmxSizeDelta = FixedNumber.fromString(ethers.utils.parseUnits(sizeDeltaUsd.toString(), 30).toString(),30);
     let synScale = BigNumber.from(10).pow(18);
     let gmxScale = BigNumber.from(10).pow(30);
-    const gmxMarketPrice = BigNumber.from(
-      (await gs.getMarketPrice(gmxBtcMarket)).value
-    );
+    const gmxMarketPrice = 
+      await gs.getMarketPrice(gmxBtcMarket);
     // console.log("gmx Market Price: ", formatUnits(gmxMarketPrice, 30));
-    const synMarketPrice = BigNumber.from(
+    const synMarketPrice = 
       //TODO: handle undefined price
       //@ts-ignore
-      (await ss.getMarketPrice(synBtcMarket)).value
-    );
+      await ss.getMarketPrice(synBtcMarket)
+    
     // console.log("syn Market Price: ", formatUnits(synMarketPrice, 18));
 
     let synSizeDelta = sizeDeltaUsd
       .mul(synScale)
       .mul(synScale)
-      .div(synMarketPrice);
+      .div(synMarketPrice!.value);
     // console.log("synSizeDelta", synSizeDelta.toString());
 
     let direction: OrderDirection = "LONG";
@@ -1161,10 +1161,10 @@ async function testAutoRouter() {
           type: "MARKET_INCREASE",
           direction: direction,
           inputCollateral: usdce,
-          inputCollateralAmount: ethers.utils.parseUnits(
+          inputCollateralAmount: FixedNumber.fromString(ethers.utils.parseUnits(
             margin,
             usdce.decimals
-          ),
+          ).toString(), usdce.decimals),
           sizeDelta: gmxSizeDelta,
           isTriggerOrder: false,
           referralCode: undefined,

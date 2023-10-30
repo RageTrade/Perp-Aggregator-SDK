@@ -2566,12 +2566,12 @@ export const checkTradePathLiquidiytInternal = async (
   );
   let toTokenInfo = getTokenInfo(infoTokens, market.marketToken!.address);
 
-  const toTokenAmount = order.sizeDelta
+  const toTokenAmount = BigNumber.from(order.sizeDelta.value)
     .mul(BigNumber.from(10).pow(market.marketToken!.decimals))
     .div(
       order.type == "MARKET_INCREASE"
         ? marketPrice
-        : order.trigger!.triggerPrice!
+        : order.trigger!.triggerPrice!.value
     );
 
   const toUsdMax = getUsd(
@@ -2580,7 +2580,7 @@ export const checkTradePathLiquidiytInternal = async (
     true,
     infoTokens,
     order.type == "MARKET_INCREASE" ? MARKET : LIMIT,
-    order.trigger!.triggerPrice!
+    BigNumber.from(order.trigger!.triggerPrice!.value)
   );
 
   let isNotEnoughReceiveTokenLiquidity = false;
@@ -2673,7 +2673,7 @@ export const getTradePreviewInternal = async (
 
   let leverage: BigNumber | undefined = BigNumber.from(0);
   const fromUsdMin = getUsd(
-    order.inputCollateralAmount,
+    BigNumber.from(order.inputCollateralAmount.value),
     order.inputCollateral.address,
     false,
     infoTokens
@@ -2682,12 +2682,12 @@ export const getTradePreviewInternal = async (
 
   // console.log("marketPrice: ", marketPrice.toString());
   // console.log("triggerPrice: ", order.trigger!.triggerPrice!.toString());
-  const toTokenAmount = order.sizeDelta
+  const toTokenAmount = BigNumber.from(order.sizeDelta.value)
     .mul(BigNumber.from(10).pow(market.marketToken!.decimals))
     .div(
       order.type == "MARKET_INCREASE"
         ? marketPrice
-        : order.trigger!.triggerPrice!
+        : order.trigger!.triggerPrice!.value
     );
   const toUsdMax = getUsd(
     toTokenAmount,
@@ -2695,7 +2695,7 @@ export const getTradePreviewInternal = async (
     true,
     infoTokens,
     order.type == "MARKET_INCREASE" ? MARKET : LIMIT,
-    order.trigger!.triggerPrice!
+    BigNumber.from(order.trigger!.triggerPrice!.value)
   );
   // const toUsdMax = order.sizeDelta;
   // console.log("toUsdMax: ", toUsdMax!.toString());
@@ -2721,7 +2721,7 @@ export const getTradePreviewInternal = async (
   let { nextAveragePrice, nextDelta, nextHasProfit } = getNextData(
     order.type == "MARKET_INCREASE",
     marketPrice,
-    order.trigger!.triggerPrice!,
+    BigNumber.from(order.trigger!.triggerPrice!.value),
     existingPosition,
     existingPosition?.direction == "LONG",
     toUsdMax!
@@ -2733,7 +2733,7 @@ export const getTradePreviewInternal = async (
   let swapFees = BigNumber.from(0);
   const result = getNextToAmount(
     ARBITRUM,
-    order.inputCollateralAmount, // collateralTokenAmount in collateral decimals
+    BigNumber.from(order.inputCollateralAmount.value), // collateralTokenAmount in collateral decimals
     order.inputCollateral.address, // Address0 for Eth
     marketCollateralToken, // Address0 for Eth
     infoTokens,
@@ -2839,8 +2839,8 @@ export const getTradePreviewInternal = async (
     indexOrIdentifier: "",
     leverage: leverage,
     size: existingPosition
-      ? existingPosition.size.add(order.sizeDelta)
-      : order.sizeDelta,
+      ? existingPosition.size.add(order.sizeDelta.value)
+      : BigNumber.from(order.sizeDelta.value),
     collateral: existingPosition
       ? existingPosition.collateral.add(fromUsdMin!)
       : fromUsdMin!,
