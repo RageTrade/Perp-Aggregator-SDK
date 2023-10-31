@@ -20,6 +20,7 @@ import {
   Order,
 } from "../../interface";
 import { logObject, toNumberDecimal } from "../../common/helper";
+import { FixedNumber } from "ethers-v6";
 
 export type GToken = {
   name: string;
