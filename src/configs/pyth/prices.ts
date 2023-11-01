@@ -103,6 +103,9 @@ export function getTokenPrice(token: string) {
 
   if (token === "sETH") token = "ETH";
   if (token === "sBTC") token = "BTC";
+  if (token === "WETH") token = "ETH";
+  if (token === "FRAX") token = "USDC";
+
 
   const price = prices[token];
 
