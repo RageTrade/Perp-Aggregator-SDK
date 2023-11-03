@@ -22,6 +22,10 @@ import {
   NumberDecimal,
   PROTOCOL_NAME,
   Provider,
+  UnsignedTxWithMetadata,
+  LiquidationHistory,
+  PageOptions,
+  PaginatedRes,
 } from "../interface";
 import Wei, { wei } from "@synthetixio/wei";
 import {
@@ -40,6 +44,7 @@ import {
   logObject,
   toNumberDecimal,
   applySlippage,
+  getPaginatedResponse,
 } from "../common/helper";
 import { getExplorerUrl } from "../configs/gmx/chains";
 import { timer } from "execution-time-decorators";
@@ -83,7 +88,7 @@ export default class SynthetixV2Service implements IExchange {
     return markets.find((m) => m.marketKey == marketKey);
   }
 
-  setup(provider: Provider): Promise<UnsignedTransaction[]> {
+  setup(provider: Provider): Promise<UnsignedTxWithMetadata[]> {
     return Promise.resolve([]);
   }
 
@@ -170,9 +175,12 @@ export default class SynthetixV2Service implements IExchange {
     };
   }
 
-  async getMarketPrice(market: ExtendedMarket): Promise<NumberDecimal> {
+  async getMarketPrice(market: ExtendedMarket) {
+    const v = getTokenPriceD(market.asset!, 18);
+    if (!v) return null;
+
     return {
-      value: (await getTokenPriceD(market.asset!, 18)).toString(),
+      value: v.toString(),
       decimals: 18,
     };
   }
@@ -190,8 +198,8 @@ export default class SynthetixV2Service implements IExchange {
     provider: Provider,
     market: ExtendedMarket,
     order: Order
-  ): Promise<UnsignedTransaction[]> {
-    let txs: UnsignedTransaction[] = [];
+  ): Promise<UnsignedTxWithMetadata[]> {
+    let txs: UnsignedTxWithMetadata[] = [];
     if (order.sizeDelta.eq(0)) return txs;
 
     const marketAddress = await this.getMarketAddress(market);
@@ -225,13 +233,15 @@ export default class SynthetixV2Service implements IExchange {
           )
         : order.trigger?.triggerPrice!;
 
-    txs.push(
-      (await this.sdk.futures.submitIsolatedMarginOrder(
+    txs.push({
+      tx: (await this.sdk.futures.submitIsolatedMarginOrder(
         marketAddress,
         sizeDelta,
         wei(acceptablePrice)
-      )) as UnsignedTransaction
-    );
+      )) as UnsignedTransaction,
+      type: "SNX_V2",
+      data: undefined,
+    });
 
     return txs;
   }
@@ -240,7 +250,7 @@ export default class SynthetixV2Service implements IExchange {
     provider: Provider,
     market: Market | undefined,
     updatedOrder: Partial<ExtendedOrder>
-  ): Promise<UnsignedTransaction[]> {
+  ): Promise<UnsignedTxWithMetadata[]> {
     throw new Error("Method not Supported.");
   }
 
@@ -248,15 +258,19 @@ export default class SynthetixV2Service implements IExchange {
     provider: Provider,
     market: ExtendedMarket,
     order: Partial<ExtendedOrder>
-  ): Promise<UnsignedTransaction[]> {
+  ): Promise<UnsignedTxWithMetadata[]> {
     const marketAddress = await this.getMarketAddress(market);
 
     return [
-      await this.sdk.futures.cancelDelayedOrder(
-        marketAddress,
-        this.swAddr,
-        true
-      ),
+      {
+        tx: await this.sdk.futures.cancelDelayedOrder(
+          marketAddress,
+          this.swAddr,
+          true
+        ),
+        type: "SNX_V2",
+        data: undefined,
+      },
     ];
   }
 
@@ -268,7 +282,7 @@ export default class SynthetixV2Service implements IExchange {
     triggerPrice: BigNumber | undefined,
     triggerAboveThreshold: boolean | undefined,
     outputToken: Token | undefined
-  ): Promise<UnsignedTransaction[]> {
+  ): Promise<UnsignedTxWithMetadata[]> {
     if (closeSize.eq(0) || closeSize.gt(position.size)) {
       throw new Error("Invalid close size");
     }
@@ -328,8 +342,8 @@ export default class SynthetixV2Service implements IExchange {
     position: ExtendedPosition,
     marginAmount: BigNumber,
     isDeposit: boolean
-  ): Promise<UnsignedTransaction[]> {
-    let txs: UnsignedTransaction[] = [];
+  ): Promise<UnsignedTxWithMetadata[]> {
+    let txs: UnsignedTxWithMetadata[] = [];
 
     // validation
     if (
@@ -385,9 +399,10 @@ export default class SynthetixV2Service implements IExchange {
     market: ExtendedMarket,
     order: Order,
     existingPosition: ExtendedPosition | undefined
-  ): Promise<ExtendedPosition> {
+  ) {
     const marketAddress = await this.getMarketAddress(market);
     const marketPrice = await this.getMarketPrice(market);
+
     await this.sdk.setProvider(provider);
 
     const futureMarket = this.mapExtendedMarketsToPartialFutureMarkets([
@@ -416,6 +431,17 @@ export default class SynthetixV2Service implements IExchange {
         }
       );
 
+    // We are using fillPrice instead of tradePreview.Price for priceimpact calculation
+    // because tradePreview.Price takes into account existing position also and gives final average price basis that
+    const fillPrice = await this.getFillPriceInternal(marketAddress, sizeDelta);
+    const mp = BigNumber.from(marketPrice!.value);
+    const priceImpactPer = mp
+      .sub(fillPrice)
+      .abs()
+      .mul(100)
+      .mul(BigNumber.from(10).pow(18))
+      .div(mp);
+
     return {
       indexOrIdentifier: "",
       size: tradePreview.size.abs(),
@@ -427,12 +453,15 @@ export default class SynthetixV2Service implements IExchange {
       status: tradePreview.status,
       fee: tradePreview.fee.add(tradePreview.keeperFee),
       leverage:
-        order.inputCollateralAmount && order.inputCollateralAmount.gt(0)
+        order.inputCollateralAmount &&
+        order.inputCollateralAmount.gt(0) &&
+        marketPrice
           ? tradePreview.size
               .mul(marketPrice.value)
               .div(order.inputCollateralAmount)
               .abs()
           : undefined,
+      priceImpact: toNumberDecimal(priceImpactPer, 18),
     };
   }
 
@@ -589,8 +618,9 @@ export default class SynthetixV2Service implements IExchange {
   async getAllOrders(
     user: string,
     provider: Provider,
-    openMarkets: OpenMarkets | undefined
-  ): Promise<Array<ExtendedOrder>> {
+    openMarkets: OpenMarkets | undefined,
+    pageOptions: PageOptions | undefined
+  ): Promise<PaginatedRes<ExtendedOrder>> {
     throw new Error("Method not implemented.");
     // let markets = await this.getExtendedMarketsFromOpenMarkets(openMarkets);
 
@@ -664,8 +694,9 @@ export default class SynthetixV2Service implements IExchange {
   async getAllPositions(
     user: string,
     provider: Provider,
-    openMarkets: OpenMarkets | undefined
-  ): Promise<ExtendedPosition[]> {
+    openMarkets: OpenMarkets | undefined,
+    pageOptions: PageOptions | undefined
+  ): Promise<PaginatedRes<ExtendedPosition>> {
     let extendedPositions: ExtendedPosition[] = [];
 
     let markets = await this.getExtendedMarketsFromOpenMarkets(openMarkets);
@@ -711,15 +742,16 @@ export default class SynthetixV2Service implements IExchange {
     //   logObject("Extended position: ", p);
     // });
 
-    return extendedPositions;
+    return getPaginatedResponse(extendedPositions, pageOptions);
   }
 
   async getTradesHistory(
     user: string,
-    openMarkers: OpenMarkets | undefined
-  ): Promise<TradeHistory[]> {
+    openMarkets: OpenMarkets | undefined,
+    pageOptions: PageOptions | undefined
+  ): Promise<PaginatedRes<TradeHistory>> {
     let trades: TradeHistory[] = [];
-    let markets = await this.getExtendedMarketsFromOpenMarkets(openMarkers);
+    let markets = await this.getExtendedMarketsFromOpenMarkets(openMarkets);
 
     let tradesHistory = await this.sdk.futures.getAllTrades(
       user,
@@ -727,30 +759,40 @@ export default class SynthetixV2Service implements IExchange {
       1000
     );
 
+    tradesHistory = tradesHistory.filter((t) => t.orderType !== "Liquidation");
+
     tradesHistory.forEach((t) => {
       let market = markets.find((m) => m.asset == t.asset.toString())!;
       trades.push({
-        marketIdentifier: { indexOrIdentifier: market.indexOrIdentifier },
-        operation: t.orderType,
-        sizeDelta: t.size.toBN(),
-        collateralDelta: t.margin.toBN(),
+        marketIdentifier: market.indexOrIdentifier,
+        collateralToken: this.sUsd,
+        // size: t.positionSize.toBN(),
+        sizeDelta: t.size.toBN().abs(),
+        collateralDelta: t.positionClosed
+          ? t.margin.mul(-1).toBN()
+          : t.margin.toBN(),
         price: t.price.toBN(),
         timestamp: t.timestamp,
         realisedPnl: t.pnl.toBN(),
         direction: t.side == PositionSide.LONG ? "LONG" : "SHORT",
         keeperFeesPaid: t.keeperFeesPaid.toBN(),
+        positionFee: t.feesPaid.toBN(),
+        operation: t.side == PositionSide.LONG ? "Long" : "Short",
         txHash: t.txnHash,
       });
     });
 
-    return trades;
+    trades.sort((a, b) => b.timestamp - a.timestamp);
+
+    return getPaginatedResponse(trades, pageOptions);
   }
 
   async getLiquidationsHistory(
     user: string,
-    openMarkers: OpenMarkets | undefined
-  ): Promise<TradeHistory[]> {
-    let trades: TradeHistory[] = [];
+    openMarkers: OpenMarkets | undefined,
+    pageOptions: PageOptions | undefined
+  ): Promise<PaginatedRes<LiquidationHistory>> {
+    let trades: LiquidationHistory[] = [];
     let markets = await this.getExtendedMarketsFromOpenMarkets(openMarkers);
 
     let tradesHistory = await this.sdk.futures.getAllTrades(
@@ -760,24 +802,34 @@ export default class SynthetixV2Service implements IExchange {
     );
 
     tradesHistory = tradesHistory.filter((t) => t.orderType == "Liquidation");
+    // tradesHistory.sort((a, b) => a.timestamp - b.timestamp);
+    // tradesHistory.forEach((t) => {
+    //   logObject("Liquidation: ", t);
+    // });
 
     tradesHistory.forEach((t) => {
       let market = markets.find((m) => m.asset == t.asset.toString())!;
       trades.push({
-        marketIdentifier: { indexOrIdentifier: market.indexOrIdentifier },
-        operation: t.orderType,
-        sizeDelta: t.size.toBN(),
-        collateralDelta: t.margin.toBN(),
-        price: t.price.toBN(),
+        marketIdentifier: market.indexOrIdentifier,
+        collateralToken: this.sUsd,
+        sizeClosed: t.size.abs().toBN(),
+        remainingCollateral: t.margin.toBN(),
+        liqudationLeverage: {
+          value: market!.maxLeverage!.value,
+          decimals: 18,
+        },
+        liquidationPrice: t.price.toBN(),
         timestamp: t.timestamp,
         realisedPnl: t.pnl.toBN(),
-        direction: t.side == PositionSide.LONG ? "LONG" : "SHORT",
-        keeperFeesPaid: t.keeperFeesPaid.toBN(),
+        direction: t.side == PositionSide.LONG ? "SHORT" : "LONG", // reverse because this is counter trade
+        liquidationFees: t.feesPaid.toBN(),
         txHash: t.txnHash,
       });
     });
 
-    return trades;
+    trades.sort((a, b) => b.timestamp - a.timestamp);
+
+    return getPaginatedResponse(trades, pageOptions);
   }
 
   async getIdleMargins(
@@ -810,8 +862,8 @@ export default class SynthetixV2Service implements IExchange {
   async withdrawUnusedCollateral(
     user: string,
     provider: Provider
-  ): Promise<UnsignedTransaction[]> {
-    let txs: UnsignedTransaction[] = [];
+  ): Promise<UnsignedTxWithMetadata[]> {
+    let txs: UnsignedTxWithMetadata[] = [];
 
     await this.sdk.setProvider(provider);
     // withdraw unused collateral tx's
@@ -920,16 +972,28 @@ export default class SynthetixV2Service implements IExchange {
   }
 
   async formulateWithdrawTx(marketAddress: string, withdrawAmount: Wei) {
-    return (await this.sdk.futures.withdrawIsolatedMargin(
+    const withdrawTx = (await this.sdk.futures.withdrawIsolatedMargin(
       marketAddress,
       withdrawAmount
     )) as UnsignedTransaction;
+
+    return {
+      tx: withdrawTx,
+      type: "SNX_V2",
+      data: undefined,
+    } as UnsignedTxWithMetadata;
   }
 
   async formulateDepositTx(marketAddress: string, depositAmount: Wei) {
-    return (await this.sdk.futures.depositIsolatedMargin(
+    const depositTx = (await this.sdk.futures.depositIsolatedMargin(
       marketAddress,
       depositAmount
     )) as UnsignedTransaction;
+
+    return {
+      tx: depositTx,
+      type: "SNX_V2",
+      data: undefined,
+    } as UnsignedTxWithMetadata;
   }
 }

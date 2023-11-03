@@ -17,14 +17,26 @@ import {
 } from "@kwenta/sdk/dist/types";
 import Wei, { wei } from "@synthetixio/wei";
 import SynthetixV2Service from "./exchanges/synthetixv2";
-import { Mode, OrderType } from "./interface";
+import {
+  ExtendedMarket,
+  Mode,
+  OrderDirection,
+  OrderType,
+  UnsignedTxWithMetadata,
+} from "./interface";
 import GmxV1Service from "./exchanges/gmxv1";
-import { getTokenBySymbol } from "./configs/gmx/tokens";
+import { formatAmount, getTokenBySymbol } from "./configs/gmx/tokens";
 import { ARBITRUM } from "./configs/gmx/chains";
 import CompositeService from "./common/compositeService";
 import { FuturesMarketKey } from "@kwenta/sdk/dist/types/futures";
 import { logObject } from "./common/helper";
-import { parseUnits } from "ethers/lib/utils";
+import { formatUnits, parseUnits } from "ethers/lib/utils";
+import {
+  getTokenPrice,
+  getTokenPriceD,
+  startStreaming,
+} from "./configs/pyth/prices";
+import { Connection } from "@solana/web3.js";
 
 config();
 
@@ -74,27 +86,12 @@ async function getTradePreview(
   marginDelta: string,
   direction: "LONG" | "SHORT",
   triggerPrice: BigNumber,
-  marketAddress: string
+  market: ExtendedMarket
 ) {
   const tradePreview = await ss.getTradePreview(
     user,
     provider,
-    {
-      mode: "ASYNC",
-      longCollateral: [],
-      shortCollateral: [],
-      indexOrIdentifier: "sETHPERP",
-      supportedOrderTypes: {
-        LIMIT_DECREASE: true,
-        LIMIT_INCREASE: true,
-        MARKET_INCREASE: true,
-        MARKET_DECREASE: true,
-        DEPOSIT: true,
-        WITHDRAW: true,
-      },
-      protocolName: "SYNTHETIX_V2",
-      address: marketAddress,
-    },
+    market,
     {
       type: "MARKET_INCREASE",
       direction: direction,
@@ -125,7 +122,7 @@ async function createLongOrder(
   direction: "LONG" | "SHORT",
   triggerPrice: BigNumber,
   inputCollateral: string
-): Promise<UnsignedTransaction[]> {
+): Promise<UnsignedTxWithMetadata[]> {
   const createOrderTxs = await ss.createOrder(
     provider,
     {
@@ -177,7 +174,7 @@ async function getIdleMargins(ss: SynthetixV2Service) {
 
 async function cancelDelayedOffChainOrder(
   ss: SynthetixV2Service
-): Promise<UnsignedTransaction[]> {
+): Promise<UnsignedTxWithMetadata[]> {
   const cancelOrder = await ss.cancelOrder(
     provider,
     {
@@ -204,7 +201,7 @@ async function cancelDelayedOffChainOrder(
 async function createTransferMarginOrder(
   ss: SynthetixV2Service,
   amount: BigNumber
-): Promise<UnsignedTransaction[]> {
+): Promise<UnsignedTxWithMetadata[]> {
   const createOrder = await ss.createOrder(
     provider,
     {
@@ -449,7 +446,10 @@ async function synService() {
   );
 
   // const tradeHistory = await ss.getTradesHistory(
-  //   "0x4dBc24BEb46fC22CD2322a9fF9e5A99CE0F0c3Eb",
+  //   // "0x4dBc24BEb46fC22CD2322a9fF9e5A99CE0F0c3Eb",
+  //   // "0xd344b73Ac42e34bC8009d522657adE4346B72c9D",
+  //   // "0x98F1b4C9Fe6CCC9d5892650569f9A801A4AdcE54",
+  //   "0xf5433b068A87141C5e214931288942B2Ceb212b0",
   //   undefined
   // );
   // tradeHistory.forEach((t) => {
@@ -457,7 +457,7 @@ async function synService() {
   // });
 
   // const liquidationsHistory = await ss.getLiquidationsHistory(
-  //   "0x4dBc24BEb46fC22CD2322a9fF9e5A99CE0F0c3Eb",
+  //   "0xf5433b068A87141C5e214931288942B2Ceb212b0",
   //   undefined
   // );
   // liquidationsHistory.forEach((t) => {
@@ -480,25 +480,28 @@ async function synService() {
   // logObject("Supported Networks: ", supportedNetworks[0]);
 
   const supportedMarkets = await ss.supportedMarkets(supportedNetworks[0]);
-  const btcMarket = supportedMarkets.find(
-    (m) => m.indexOrIdentifier === FuturesMarketKey.sBTCPERP
-  )!;
-  const btcPrice = await ss.getMarketPrice(btcMarket);
+  // const btcMarket = supportedMarkets.find(
+  //   (m) => m.indexOrIdentifier === FuturesMarketKey.sBTCPERP
+  // )!;
+  // const btcPrice = await ss.getMarketPrice(btcMarket);
+  // const dynamicMetadata = await ss.getDynamicMetadata(btcMarket);
+  // logObject("Dynamic Metadata: ", dynamicMetadata);
+
   // console.log("BTC Price: ", ethers.utils.formatUnits(btcPrice.value, 18));
   // logObject("Supported Markets: ", supportedMarkets[0]);
-  for (const market of supportedMarkets) {
-    try {
-      let price = await ss.getMarketPrice(market);
-      console.log(
-        "Asset: ",
-        market.asset,
-        "Price: ",
-        ethers.utils.formatUnits(price.value, 18)
-      );
-    } catch (e) {
-      console.log("Asset: ", market.asset, "Error: ", e);
-    }
-  }
+  // for (const market of supportedMarkets) {
+  //   try {
+  //     let price = await ss.getMarketPrice(market);
+  //     console.log(
+  //       "Asset: ",
+  //       market.asset,
+  //       "Price: ",
+  //       ethers.utils.formatUnits(price.value, 18)
+  //     );
+  //   } catch (e) {
+  //     console.log("Asset: ", market.asset, "Error: ", e);
+  //   }
+  // }
 
   // (await sdk.futures.getMarkets()).forEach(async (market) => {
   //   let price = await sdk.futures.getAssetPrice(market.market);
@@ -538,9 +541,9 @@ async function synService() {
   //   }
   // }
 
-  // const sizeDelta = "0.0612";
-  // const direction = "LONG";
-  // const marketAddress = "0x2b3bb4c683bfc5239b029131eef3b1d214478d93";
+  const sizeDelta = "0.0612";
+  const direction = "LONG";
+  const marketAddress = "0x2b3bb4c683bfc5239b029131eef3b1d214478d93";
 
   // const openMarkets = await compositeService();
   // const futureMarkets = await ss.getPartialFutureMarketsFromOpenMarkets(
@@ -643,16 +646,21 @@ async function synService() {
   //   console.log("\n\n\n");
   // }
 
-  // const tradePreview = await getTradePreview(
-  //   "0x89E369321619114e317a3121A2693f39728f51f1",
-  //   ss,
-  //   sizeDelta,
-  //   "50",
-  //   direction,
-  //   ethers.utils.parseUnits("1650.187897946949", 18),
-  //   marketAddress
-  // );
-  // logObject("Trade Preview: ", tradePreview);
+  const ethMarket = supportedMarkets.find(
+    (m) => m.indexOrIdentifier === FuturesMarketKey.sETHPERP
+  )!;
+
+  const tradePreview = await getTradePreview(
+    "0x89E369321619114e317a3121A2693f39728f51f1",
+    ss,
+    sizeDelta,
+    "50",
+    direction,
+    ethers.utils.parseUnits("1650.187897946949", 18),
+    ethMarket
+  );
+  logObject("Trade Preview: ", tradePreview);
+  logObject("PI: ", tradePreview.priceImpact!);
 
   // if (tradePreview.status == 0) {
   //   const triggerPrice = direction.includes("SHORT")
@@ -744,11 +752,41 @@ async function gmxService() {
 
   let supportedMarkets = await gs.supportedMarkets(gs.supportedNetworks()[0]);
 
-  const liquidationsHistory = await gs.getLiquidationsHistory(
-    "0xC41427A0B49eB775E022E676F0412B12df1193a5",
-    undefined
+  let btcMarket = supportedMarkets.find(
+    (m) =>
+      m.indexOrIdentifier.toLowerCase() ===
+      "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f".toLowerCase() //BTC market
+  )!;
+
+  // const dynamicMetadata = await gs.getDynamicMetadata(btcMarket, provider);
+  // logObject("Dynamic Metadata: ", dynamicMetadata);
+
+  const tradeHistory = await gs.getTradesHistory(
+    // "0xC41427A0B49eB775E022E676F0412B12df1193a5",
+    // "0xe4718282022518A2499dD73Fc767654095F198A5",
+    "0xd344b73Ac42e34bC8009d522657adE4346B72c9D",
+    // "0x98F1b4C9Fe6CCC9d5892650569f9A801A4AdcE54",
+    // "0xf5433b068A87141C5e214931288942B2Ceb212b0",
+    undefined,
+    {
+      limit: 3,
+      skip: 1,
+    }
   );
-  console.log({ liquidationsHistory });
+
+  console.dir({ tradeHistory }, { depth: 4 });
+  // tradeHistory.forEach((t) => {
+  //   logObject("Trade History: ", t);
+  // });
+  // console.log("Trade History To ", tradeHistory[0]);
+  // console.log("Trade History From ", tradeHistory[tradeHistory.length - 1]);
+
+  // const liquidationsHistory = await gs.getLiquidationsHistory(
+  //   "0xC41427A0B49eB775E022E676F0412B12df1193a5",
+  //   undefined
+  // );
+  // console.dir({ liquidationsHistory }, { depth: 4 });
+  // logObject("Liquidations History: ", liquidationsHistory[0]);
 
   // supportedMarkets.forEach((m) => {
   //   logObject("Supported Market: ", m);
@@ -852,7 +890,7 @@ async function gmxService() {
     address: ethers.constants.AddressZero,
   };
 
-  const allPositions = await gs.getAllPositions(w, provider);
+  // const allPositions = await gs.getAllPositions(w, provider);
   // for (let i = 0; i < allPositions.length; i++) {
   //   logObject("Position: ", allPositions[i]);
   //   let positionOrders = await gs.getAllOrdersForPosition(
@@ -866,7 +904,7 @@ async function gmxService() {
   //   });
   // }
 
-  let position0 = allPositions[0];
+  // let position0 = allPositions[0];
   // let market = supportedMarkets.find(
   //   (m) => m.indexOrIdentifier.toLowerCase() === "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f".toLowerCase() //BTC market
   // )!;
@@ -915,19 +953,19 @@ async function gmxService() {
   // );
   // logObject("editCollateralPreview: ", editCollateralPreview);
 
-  let closePositionTxs = await gs.closePosition(
-    provider,
-    allPositions[0],
-    allPositions[0].size.mul(100).div(100),
-    // ethers.utils.parseUnits("10", 30),
-    true,
-    ethers.utils.parseUnits("125936", 30),
-    true,
-    eth
-  );
-  closePositionTxs.forEach((tx) => {
-    logObject("Close position tx: ", tx);
-  });
+  // let closePositionTxs = await gs.closePosition(
+  //   provider,
+  //   allPositions[0],
+  //   allPositions[0].size.mul(100).div(100),
+  //   // ethers.utils.parseUnits("10", 30),
+  //   true,
+  //   ethers.utils.parseUnits("125936", 30),
+  //   true,
+  //   eth
+  // );
+  // closePositionTxs.forEach((tx) => {
+  //   logObject("Close position tx: ", tx);
+  // });
   // await fireTxs(closePositionTxs);
 
   // let triggerClosePositionTxs = await gs.closePosition(
@@ -1020,9 +1058,245 @@ async function testService() {
 //     process.exitCode = 1;
 //   });
 
-synService()
+async function testAutoRouter() {
+  // synthetix initial setup
+  const ss = new SynthetixV2Service(sdk, w);
+  const supportedNetworks = ss.supportedNetworks();
+  // logObject("Supported Networks: ", supportedNetworks[0]);
+
+  const synSupportedMarkets = await ss.supportedMarkets(supportedNetworks[0]);
+  const synBtcMarket = synSupportedMarkets.find(
+    (m) => m.indexOrIdentifier === FuturesMarketKey.sBTCPERP
+  )!;
+  let synProvider = new ethers.providers.JsonRpcProvider(
+    "https://optimism.blockpi.network/v1/rpc/public",
+    10
+  );
+
+  // gmx initial setup
+  const gmxProvider = new ethers.providers.JsonRpcProvider(
+    "https://arbitrum.blockpi.network/v1/rpc/public",
+    // "https://rpc.ankr.com/arbitrum",
+    ARBITRUM
+  );
+  const signer = new ethers.Wallet(wpk, gmxProvider);
+  const gs = new GmxV1Service(signer.address);
+  let gmxSupportedMarkets = await gs.supportedMarkets(
+    gs.supportedNetworks()[0]
+  );
+  const gmxBtcMarket = gmxSupportedMarkets.find(
+    (m) =>
+      m.indexOrIdentifier.toLowerCase() ===
+      "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f".toLowerCase() //BTC market
+  )!;
+  let usdce = {
+    name: "Bridged USDC (USDC.e)",
+    symbol: "USDC.e",
+    decimals: "6",
+    address: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
+  };
+
+  type Scenario = {
+    collateralUsd: string;
+    lev: string;
+  };
+
+  let collateralAmounts = ["1000", "10000", "100000"];
+  let levs = ["5", "10"];
+
+  let scenarios: Scenario[] = [];
+  for (let i = 0; i < collateralAmounts.length; i++) {
+    for (let j = 0; j < levs.length; j++) {
+      scenarios.push({
+        collateralUsd: collateralAmounts[i],
+        lev: levs[j],
+      });
+    }
+  }
+
+  // compare get trade preview for various position sizes for gs and ss
+  for (let i = 0; i < scenarios.length; i++) {
+    console.log(
+      "\nScenario",
+      i + 1,
+      ": (Margin: ",
+      scenarios[i].collateralUsd,
+      ", Lev: ",
+      scenarios[i].lev,
+      ")"
+    );
+
+    const PRECISION = BigNumber.from(10).pow(50);
+    let margin = scenarios[i].collateralUsd;
+    let lev = scenarios[i].lev;
+    let sizeDeltaUsd = BigNumber.from(margin).mul(lev);
+    let gmxSizeDelta = ethers.utils.parseUnits(sizeDeltaUsd.toString(), 30);
+    let synScale = BigNumber.from(10).pow(18);
+    let gmxScale = BigNumber.from(10).pow(30);
+    const gmxMarketPrice = BigNumber.from(
+      (await gs.getMarketPrice(gmxBtcMarket)).value
+    );
+    // console.log("gmx Market Price: ", formatUnits(gmxMarketPrice, 30));
+    const synMarketPrice = BigNumber.from(
+      //TODO: handle undefined price
+      //@ts-ignore
+      (await ss.getMarketPrice(synBtcMarket)).value
+    );
+    // console.log("syn Market Price: ", formatUnits(synMarketPrice, 18));
+
+    let synSizeDelta = sizeDeltaUsd
+      .mul(synScale)
+      .mul(synScale)
+      .div(synMarketPrice);
+    // console.log("synSizeDelta", synSizeDelta.toString());
+
+    let direction: OrderDirection = "LONG";
+
+    const previews = await Promise.all([
+      gs.getTradePreview(
+        w,
+        gmxProvider,
+        gmxBtcMarket,
+        {
+          type: "MARKET_INCREASE",
+          direction: direction,
+          inputCollateral: usdce,
+          inputCollateralAmount: ethers.utils.parseUnits(
+            margin,
+            usdce.decimals
+          ),
+          sizeDelta: gmxSizeDelta,
+          isTriggerOrder: false,
+          referralCode: undefined,
+          trigger: {
+            triggerPrice: gmxMarketPrice,
+            triggerAboveThreshold: false,
+          },
+          slippage: "1",
+        },
+        undefined
+      ),
+      ss.getTradePreview(
+        w,
+        synProvider,
+        synBtcMarket,
+        {
+          type: "MARKET_INCREASE",
+          direction: direction,
+          inputCollateral: {
+            name: "string",
+            symbol: "string",
+            decimals: "string",
+            address: "string",
+          },
+          inputCollateralAmount: ethers.utils.parseUnits(margin, 18),
+          sizeDelta: synSizeDelta,
+          isTriggerOrder: false,
+          referralCode: undefined,
+          trigger: {
+            triggerPrice: synMarketPrice,
+            triggerAboveThreshold: true,
+          },
+          slippage: "1",
+        },
+        undefined,
+        //TODO: handle undefined price
+        //@ts-ignore
+        synMarketPrice
+      ),
+    ]);
+
+    const gmxTP = previews[0];
+    // logObject("gmx TP: ", gmxTP);
+    const synTP = previews[1];
+    // logObject("syn TP: ", synTP);
+
+    const synMAF = ethers.utils.parseUnits(margin, 18).sub(synTP.fee!);
+    // console.log("syn MAF: ", formatUnits(synMAF.toString(), 18));
+    // console.log("synSizeDelta: ", formatUnits(synSizeDelta.toString(), 18));
+    const synEP = synMAF.mul(lev).mul(PRECISION).div(synSizeDelta);
+
+    // console.log("gmxSizeDelta: ", formatUnits(gmxSizeDelta, 30));
+    const gmxSize = gmxSizeDelta.mul(gmxScale).div(gmxMarketPrice);
+    // console.log("gmxSize: ", formatUnits(gmxSize, 50));
+    const gmxMAF = ethers.utils.parseUnits(margin, 30).sub(gmxTP.fee!);
+    // console.log("gmx MAF: ", formatUnits(gmxMAF.toString(), 30));
+
+    const gmxEP = gmxMAF.mul(lev).mul(PRECISION).div(gmxSize);
+
+    console.log(
+      "Syn Stats:",
+      "\nMarket Price=>",
+      formatUnits(synMarketPrice, 18),
+      "\nEntry Price=>",
+      formatUnits(synTP.averageEntryPrice, 18),
+      "\nFees=>",
+      formatUnits(synTP.fee!, 18),
+      "\nSize=>",
+      formatUnits(synTP.size, 18)
+    );
+    console.log(
+      "Gmx Stats:",
+      "\nMarket Price=>",
+      formatUnits(gmxMarketPrice, 30),
+      "\nEntry Price=>",
+      formatUnits(gmxTP.averageEntryPrice, 30),
+      "\nFees=>",
+      formatUnits(gmxTP.fee!, 30),
+      "\nSize=>",
+      formatUnits(gmxSize, 30)
+    );
+    console.log("synEP: ", formatUnits(synEP, 50));
+    console.log("gmxEP: ", formatUnits(gmxEP, 50));
+  }
+}
+
+async function testPrice() {
+  await delay(4000);
+
+  for (let i = 0; i < 1000; i++) {
+    const price = getTokenPriceD("BTC", 18);
+    console.log("Price: ", formatUnits((price || 0).toString(), 18));
+    await delay(1000);
+  }
+}
+
+// async function priceWS() {
+//   const PYTHNET_CLUSTER_NAME: PythCluster = "pythnet";
+//   const connection = new Connection(getPythClusterApiUrl(PYTHNET_CLUSTER_NAME));
+//   const pythPublicKey = getPythProgramKeyForCluster(PYTHNET_CLUSTER_NAME);
+
+//   const pythConnection = new PythConnection(connection, pythPublicKey);
+//   pythConnection.onPriceChangeVerbose((productAccount, priceAccount) => {
+//     // The arguments to the callback include solana account information / the update slot if you need it.
+//     const product = productAccount.accountInfo.data.product;
+//     const price = priceAccount.accountInfo.data;
+//     // sample output:
+//     // SOL/USD: $14.627930000000001 ±$0.01551797
+//     if (price.price && price.confidence) {
+//       // tslint:disable-next-line:no-console
+//       console.log(
+//         `${product.symbol}: $${price.price} \xB1$${price.confidence}`
+//       );
+//     } else {
+//       // tslint:disable-next-line:no-console
+//       console.log(
+//         `${product.symbol}: price currently unavailable. status is ${
+//           PriceStatus[price.status]
+//         }`
+//       );
+//     }
+//   });
+
+//   // tslint:disable-next-line:no-console
+//   console.log("Reading from Pyth price feed...");
+//   pythConnection.start();
+// }
+
+startStreaming();
+
+gmxService()
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error);
-    process.exitCode = 1;
   });

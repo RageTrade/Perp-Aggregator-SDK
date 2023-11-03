@@ -1,4 +1,8 @@
 import { BigNumber, BigNumberish, UnsignedTransaction, ethers } from "ethers";
+import {
+  AddressValidationAdditionalSessionData,
+  ERC20ApprovalAddtionalSessionData,
+} from "./tx-metadata-types";
 
 export type Provider = ethers.providers.Provider;
 
@@ -116,7 +120,7 @@ export type ExtendedPosition = Position & {
   fee?: BigNumber;
   leverage?: BigNumber;
   status?: number;
-  priceImpact?: BigNumber;
+  priceImpact?: NumberDecimal;
   exceedsPriceProtection?: boolean;
   sizeDelta?: BigNumber;
   skewAdjustedPrice?: BigNumber;
@@ -154,17 +158,39 @@ export type Trade = ExtendedPosition & {
   txLink?: string;
 };
 
-export type TradeHistory = {
-  marketIdentifier: MarketIdentifier;
+export type LiquidationHistory = {
+  marketIdentifier: MarketIdentifier["indexOrIdentifier"];
+  collateralToken: Token;
+  liquidationPrice: BigNumber;
+  sizeClosed: BigNumber;
+  direction: OrderDirection;
+  realisedPnl: BigNumber;
+  liquidationFees: BigNumber;
+  remainingCollateral: BigNumber;
+  liqudationLeverage: NumberDecimal;
   timestamp: number;
-  operation: string;
+  txHash?: string;
+};
+
+export type TradeHistory = {
+  marketIdentifier: MarketIdentifier["indexOrIdentifier"];
+  collateralToken: Token;
+  timestamp: number;
+  // size?: BigNumber; // final Size
   sizeDelta: BigNumber;
-  direction?: OrderDirection;
+  direction: OrderDirection;
   price: BigNumber;
   collateralDelta: BigNumber;
-  realisedPnl: BigNumber;
-  keeperFeesPaid?: BigNumber;
-  isTriggerAboveThreshold?: Boolean;
+  realisedPnl: BigNumber | undefined;
+  keeperFeesPaid: BigNumber;
+  positionFee: BigNumber;
+  operation:
+    | "Open Long"
+    | "Close Long"
+    | "Open Short"
+    | "Close Short"
+    | "Long"
+    | "Short";
   txHash: string;
 };
 
@@ -209,9 +235,57 @@ export type OpenMarkets = {
   [index: string]: Array<OpenMarketData>;
 };
 
+export type UnsignedTxWithMetadata =
+  | {
+      tx: UnsignedTransaction;
+      type: "ERC20_APPROVAL";
+      data: ERC20ApprovalAddtionalSessionData;
+      ethRequired?: BigNumber;
+    }
+  | {
+      tx: UnsignedTransaction;
+      type: "GMX_V1";
+      data: undefined;
+      ethRequired?: BigNumber;
+    }
+  | {
+      tx: UnsignedTransaction;
+      type: "LIFI";
+      data: undefined;
+      ethRequired?: BigNumber;
+    }
+  | {
+      tx: UnsignedTransaction;
+      type: "SNX_V2";
+      data: undefined;
+      ethRequired?: BigNumber;
+    }
+  | {
+      tx: UnsignedTransaction;
+      type: "NATIVE";
+      data: undefined;
+      ethRequired?: BigNumber;
+    }
+  | {
+      tx: UnsignedTransaction;
+      type: "ADDRESS";
+      data: AddressValidationAdditionalSessionData;
+      ethRequired?: BigNumber;
+    };
+
+export type PaginatedRes<T> = {
+  result: T[];
+  maxItemsCount: number;
+};
+
+export type PageOptions = {
+  limit: number;
+  skip: number;
+};
+
 export interface IExchange {
   // something to indicate when setup should be called
-  setup(provider: Provider): Promise<UnsignedTransaction[]>;
+  setup(provider: Provider): Promise<UnsignedTxWithMetadata[]>;
 
   supportedNetworks(): readonly Network[];
 
@@ -221,19 +295,19 @@ export interface IExchange {
     provider: Provider,
     market: ExtendedMarket,
     order: Order
-  ): Promise<UnsignedTransaction[]>;
+  ): Promise<UnsignedTxWithMetadata[]>;
 
   updateOrder(
     provider: Provider,
     market: ExtendedMarket | undefined,
     updatedOrder: Partial<ExtendedOrder>
-  ): Promise<UnsignedTransaction[]>;
+  ): Promise<UnsignedTxWithMetadata[]>;
 
   cancelOrder(
     provider: Provider,
     market: ExtendedMarket | undefined,
     order: Partial<ExtendedOrder>
-  ): Promise<UnsignedTransaction[]>;
+  ): Promise<UnsignedTxWithMetadata[]>;
 
   closePosition(
     provider: Provider,
@@ -243,7 +317,7 @@ export interface IExchange {
     triggerPrice: BigNumber | undefined,
     triggerAboveThreshold: boolean | undefined,
     outputToken: Token | undefined
-  ): Promise<UnsignedTransaction[]>;
+  ): Promise<UnsignedTxWithMetadata[]>;
 
   updatePositionMargin(
     provider: Provider,
@@ -251,9 +325,9 @@ export interface IExchange {
     marginAmount: BigNumber,
     isDeposit: boolean,
     transferToken: Token | undefined
-  ): Promise<UnsignedTransaction[]>;
+  ): Promise<UnsignedTxWithMetadata[]>;
 
-  getMarketPrice(market: ExtendedMarket): Promise<NumberDecimal>;
+  getMarketPrice(market: ExtendedMarket): Promise<NumberDecimal | null>;
 
   getDynamicMetadata(
     market: ExtendedMarket,
@@ -270,8 +344,9 @@ export interface IExchange {
   getAllOrders(
     user: string,
     provider: Provider,
-    openMarkers: OpenMarkets | undefined
-  ): Promise<Array<ExtendedOrder>>;
+    openMarkers: OpenMarkets | undefined,
+    pageOptions: PageOptions | undefined
+  ): Promise<PaginatedRes<ExtendedOrder>>;
 
   getAllOrdersForPosition(
     user: string,
@@ -295,18 +370,21 @@ export interface IExchange {
   getAllPositions(
     user: string,
     provider: Provider,
-    openMarkers: OpenMarkets | undefined
-  ): Promise<ExtendedPosition[]>;
+    openMarkers: OpenMarkets | undefined,
+    pageOptions: PageOptions | undefined
+  ): Promise<PaginatedRes<ExtendedPosition>>;
 
   getTradesHistory(
     user: string,
-    openMarkers: OpenMarkets | undefined
-  ): Promise<TradeHistory[]>;
+    openMarkers: OpenMarkets | undefined,
+    pageOptions: PageOptions | undefined
+  ): Promise<PaginatedRes<TradeHistory>>;
 
   getLiquidationsHistory(
     user: string,
-    openMarkers: OpenMarkets | undefined
-  ): Promise<TradeHistory[]>;
+    openMarkers: OpenMarkets | undefined,
+    pageOptions: PageOptions | undefined
+  ): Promise<PaginatedRes<LiquidationHistory>>;
 
   getIdleMargins(
     user: string,

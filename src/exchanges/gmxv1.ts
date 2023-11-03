@@ -19,6 +19,10 @@ import {
   TRIGGER_TYPE,
   Provider,
   ViewError,
+  UnsignedTxWithMetadata,
+  LiquidationHistory,
+  PaginatedRes,
+  PageOptions,
 } from "../interface";
 import {
   IERC20__factory,
@@ -54,20 +58,26 @@ import {
   GToken,
   checkTradePathLiquidiytInternal,
 } from "../configs/gmx/tokens";
-import { applySlippage, logObject, toNumberDecimal } from "../common/helper";
+import {
+  applySlippage,
+  getPaginatedResponse,
+  logObject,
+  toNumberDecimal,
+} from "../common/helper";
 import { timer } from "execution-time-decorators";
 import { parseUnits } from "ethers/lib/utils";
 
+// taken from contract Vault.sol
+const LIQUIDATION_FEE_USD = BigNumber.from("5000000000000000000000000000000");
+
 export default class GmxV1Service implements IExchange {
-  private REFERRAL_CODE = ethers.utils.hexZeroPad(
-    ethers.utils.toUtf8Bytes("RAGE"),
-    32
-  );
+  private REFERRAL_CODE =
+    "0x7261676574726164650000000000000000000000000000000000000000000000";
   // taking as DECREASE_ORDER_EXECUTION_GAS_FEE because it is highest and diff is miniscule
   private EXECUTION_FEE = getConstant(
     ARBITRUM,
     "DECREASE_ORDER_EXECUTION_GAS_FEE"
-  )! as BigNumberish;
+  )! as BigNumber;
   private protocolIdentifier: PROTOCOL_NAME = "GMX_V1";
   private nativeTokenAddress = getContract(ARBITRUM, "NATIVE_TOKEN")!;
   private shortTokenAddress = getTokenBySymbol(ARBITRUM, "USDC.e")!.address;
@@ -111,7 +121,7 @@ export default class GmxV1Service implements IExchange {
 
     const nativeTokenAddress = getContract(ARBITRUM, "NATIVE_TOKEN");
 
-    const fundingRateInfoPromise = reader.getFundingRates(
+    const fundingRateInfo = await reader.getFundingRates(
       getContract(ARBITRUM, "Vault")!,
       nativeTokenAddress!,
       [market.marketToken?.address!]
@@ -122,7 +132,7 @@ export default class GmxV1Service implements IExchange {
       ARBITRUM,
       false,
       [BigNumber.from(0)],
-      await fundingRateInfoPromise
+      fundingRateInfo
     );
 
     const info = infoTokens[market.marketToken?.address!];
@@ -131,7 +141,7 @@ export default class GmxV1Service implements IExchange {
       oiLongUsd: info.guaranteedUsd!,
       oiShortUsd: info.globalShortSize!,
       fundingRate: BigNumber.from(0),
-      borrowRate: info.fundingRate,
+      borrowRate: fundingRateInfo[0],
       availableLiquidityLongUSD: info.maxAvailableLong,
       availableLiquidityShortUSD: info.maxAvailableShort,
       marketLimitUsd: BigNumber.from(0),
@@ -145,7 +155,7 @@ export default class GmxV1Service implements IExchange {
     }
   }
 
-  async setup(provider: Provider): Promise<UnsignedTransaction[]> {
+  async setup(provider: Provider): Promise<UnsignedTxWithMetadata[]> {
     const referralStorage = ReferralStorage__factory.connect(
       getContract(ARBITRUM, "ReferralStorage")!,
       provider
@@ -157,14 +167,18 @@ export default class GmxV1Service implements IExchange {
       return Promise.resolve([]);
     }
 
-    let txs: UnsignedTransaction[] = [];
+    let txs: UnsignedTxWithMetadata[] = [];
 
     // set referral code
     const setReferralCodeTx =
       await referralStorage.populateTransaction.setTraderReferralCodeByUser(
         this.REFERRAL_CODE
       );
-    txs.push(setReferralCodeTx);
+    txs.push({
+      tx: setReferralCodeTx,
+      type: "GMX_V1",
+      data: undefined,
+    });
 
     // approve router
     const router = Router__factory.connect(
@@ -174,13 +188,21 @@ export default class GmxV1Service implements IExchange {
     const approveOrderBookTx = await router.populateTransaction.approvePlugin(
       getContract(ARBITRUM, "OrderBook")!
     );
-    txs.push(approveOrderBookTx);
+    txs.push({
+      tx: approveOrderBookTx,
+      type: "GMX_V1",
+      data: undefined,
+    });
 
     const approvePositionRouterTx =
       await router.populateTransaction.approvePlugin(
         getContract(ARBITRUM, "PositionRouter")!
       );
-    txs.push(approvePositionRouterTx);
+    txs.push({
+      tx: approvePositionRouterTx,
+      type: "GMX_V1",
+      data: undefined,
+    });
 
     return txs;
   }
@@ -189,23 +211,23 @@ export default class GmxV1Service implements IExchange {
     tokenAddress: string,
     provider: Provider,
     allowanceAmount: BigNumber
-  ): Promise<UnsignedTransaction | undefined> {
+  ): Promise<UnsignedTxWithMetadata | undefined> {
     let token = IERC20__factory.connect(tokenAddress, provider);
+    const router = getContract(ARBITRUM, "Router")!;
 
-    let allowance = await token.allowance(
-      this.swAddr,
-      getContract(ARBITRUM, "Router")!
-    );
+    let allowance = await token.allowance(this.swAddr, router);
 
     if (allowance.lt(allowanceAmount)) {
       let tx = await token.populateTransaction.approve(
-        getContract(ARBITRUM, "Router")!,
+        router,
         ethers.constants.MaxUint256
       );
-      return tx;
+      return {
+        tx,
+        type: "ERC20_APPROVAL",
+        data: { chainId: ARBITRUM, spender: router, token: tokenAddress },
+      };
     }
-
-    return Promise.resolve(undefined);
   }
 
   supportedNetworks(): readonly Network[] {
@@ -243,7 +265,7 @@ export default class GmxV1Service implements IExchange {
         marketToken: indexToken,
         minLeverage: toNumberDecimal(parseUnits("1.1", 4), 4),
         maxLeverage: toNumberDecimal(parseUnits("50", 4), 4),
-        minInitialMargin: toNumberDecimal(BigNumber.from("0"), 30),
+        minInitialMargin: toNumberDecimal(BigNumber.from("11"), 30),
         protocolName: this.protocolIdentifier,
         minPositionSize: toNumberDecimal(parseUnits("10", 30), 30),
       });
@@ -281,8 +303,8 @@ export default class GmxV1Service implements IExchange {
     provider: Provider,
     market: ExtendedMarket,
     order: Order
-  ): Promise<UnsignedTransaction[]> {
-    let txs: UnsignedTransaction[] = [];
+  ): Promise<UnsignedTxWithMetadata[]> {
+    let txs: UnsignedTxWithMetadata[] = [];
 
     // approval tx
     if (
@@ -305,6 +327,7 @@ export default class GmxV1Service implements IExchange {
     );
 
     let createOrderTx: UnsignedTransaction;
+    let extraEthReq = BigNumber.from(0);
     if (order.type == "LIMIT_INCREASE") {
       const orderBook = OrderBook__factory.connect(
         getContract(ARBITRUM, "OrderBook")!,
@@ -313,6 +336,13 @@ export default class GmxV1Service implements IExchange {
 
       const path: string[] = [];
       path.push(tokenAddressString);
+
+      const isEthCollateral =
+        order.inputCollateral.address == ethers.constants.AddressZero;
+
+      if (isEthCollateral) {
+        extraEthReq = order.inputCollateralAmount;
+      }
 
       createOrderTx = await orderBook.populateTransaction.createIncreaseOrder(
         path,
@@ -325,14 +355,11 @@ export default class GmxV1Service implements IExchange {
         order.trigger?.triggerPrice!,
         !(order.direction == "LONG"),
         this.EXECUTION_FEE,
-        order.inputCollateral.address == ethers.constants.AddressZero,
+        isEthCollateral,
         {
-          value:
-            order.inputCollateral.address == ethers.constants.AddressZero
-              ? BigNumber.from(this.EXECUTION_FEE).add(
-                  order.inputCollateralAmount
-                )
-              : this.EXECUTION_FEE,
+          value: isEthCollateral
+            ? this.EXECUTION_FEE.add(order.inputCollateralAmount)
+            : this.EXECUTION_FEE,
         }
       );
     } else if (order.type == "MARKET_INCREASE") {
@@ -380,6 +407,8 @@ export default class GmxV1Service implements IExchange {
             }
           );
       } else {
+        extraEthReq = order.inputCollateralAmount;
+
         createOrderTx =
           await positionRouter.populateTransaction.createIncreasePositionETH(
             path,
@@ -392,14 +421,18 @@ export default class GmxV1Service implements IExchange {
             ethers.constants.HashZero, // Referral code set during setup()
             ethers.constants.AddressZero,
             {
-              value: BigNumber.from(this.EXECUTION_FEE).add(
-                order.inputCollateralAmount
-              ),
+              value: this.EXECUTION_FEE.add(order.inputCollateralAmount),
             }
           );
       }
     }
-    txs.push(createOrderTx!);
+
+    txs.push({
+      tx: createOrderTx!,
+      type: "GMX_V1",
+      data: undefined,
+      ethRequired: await this.getEthRequired(provider, extraEthReq),
+    });
 
     return txs;
   }
@@ -408,7 +441,7 @@ export default class GmxV1Service implements IExchange {
     provider: Provider,
     market: ExtendedMarket | undefined,
     updatedOrder: Partial<ExtendedOrder>
-  ): Promise<UnsignedTransaction[]> {
+  ): Promise<UnsignedTxWithMetadata[]> {
     const orderBook = OrderBook__factory.connect(
       getContract(ARBITRUM, "OrderBook")!,
       provider
@@ -435,14 +468,14 @@ export default class GmxV1Service implements IExchange {
       throw new Error("Invalid order type");
     }
 
-    return [updateOrderTx];
+    return [{ tx: updateOrderTx, type: "GMX_V1", data: undefined }];
   }
 
   async cancelOrder(
     provider: Provider,
     market: Market | undefined,
     order: Partial<ExtendedOrder>
-  ): Promise<UnsignedTransaction[]> {
+  ): Promise<UnsignedTxWithMetadata[]> {
     const orderBook = OrderBook__factory.connect(
       getContract(ARBITRUM, "OrderBook")!,
       provider
@@ -462,7 +495,7 @@ export default class GmxV1Service implements IExchange {
       throw new Error("Invalid order type");
     }
 
-    return [cancelOrderTx];
+    return [{ tx: cancelOrderTx, type: "GMX_V1", data: undefined }];
   }
 
   getOrder(
@@ -476,8 +509,10 @@ export default class GmxV1Service implements IExchange {
   // @timer()
   async getAllOrders(
     user: string,
-    provider: Provider
-  ): Promise<ExtendedOrder[]> {
+    provider: Provider,
+    openMarkers: OpenMarkets | undefined,
+    pageOptions: PageOptions | undefined
+  ): Promise<PaginatedRes<ExtendedOrder>> {
     const eos: ExtendedOrder[] = [];
 
     // TODO - Filter the market orders
@@ -542,7 +577,7 @@ export default class GmxV1Service implements IExchange {
       });
     });
 
-    return eos;
+    return getPaginatedResponse(eos, pageOptions);
   }
 
   getMarketOrders(
@@ -566,7 +601,11 @@ export default class GmxV1Service implements IExchange {
     position: ExtendedPosition,
     openMarkers: OpenMarkets | undefined
   ): Promise<Array<ExtendedOrder>> {
-    return (await this.getAllOrders(user, provider)).filter(
+    const allOrders = (
+      await this.getAllOrders(user, provider, undefined, undefined)
+    ).result as ExtendedOrder[];
+
+    return allOrders.filter(
       (order) =>
         order.marketToken!.address == position.indexToken!.address &&
         order.direction == position.direction
@@ -575,8 +614,10 @@ export default class GmxV1Service implements IExchange {
 
   async getAllPositions(
     user: string,
-    provider: Provider
-  ): Promise<ExtendedPosition[]> {
+    provider: Provider,
+    openMarkers: OpenMarkets | undefined,
+    pageOptions: PageOptions | undefined
+  ): Promise<PaginatedRes<ExtendedPosition>> {
     const reader = Reader__factory.connect(
       getContract(ARBITRUM, "Reader")!,
       provider
@@ -710,7 +751,7 @@ export default class GmxV1Service implements IExchange {
 
     // console.log(extPositions)
 
-    return extPositions;
+    return getPaginatedResponse(extPositions, pageOptions);
   }
 
   async updatePositionMargin(
@@ -719,7 +760,7 @@ export default class GmxV1Service implements IExchange {
     marginAmount: BigNumber, // For deposit it's in token terms and for withdraw it's in USD terms (F/E)
     isDeposit: boolean,
     transferToken: Token
-  ): Promise<UnsignedTransaction[]> {
+  ): Promise<UnsignedTxWithMetadata[]> {
     const positionRouter = PositionRouter__factory.connect(
       getContract(ARBITRUM, "PositionRouter")!,
       provider
@@ -730,9 +771,11 @@ export default class GmxV1Service implements IExchange {
     let fillPrice = await this.getMarketPriceByIndexAddress(indexAddress);
     let transferTokenString = this.getTokenAddressString(transferToken.address);
 
-    let marginTx: UnsignedTransaction;
     const path: string[] = [];
-    let txs: UnsignedTransaction[] = [];
+
+    let marginTx: UnsignedTransaction;
+    let txs: UnsignedTxWithMetadata[] = [];
+    let extraEthReq = BigNumber.from(0);
 
     if (isDeposit) {
       //approve router for token spends
@@ -757,6 +800,8 @@ export default class GmxV1Service implements IExchange {
       }
 
       if (transferToken.address == ethers.constants.AddressZero) {
+        extraEthReq = marginAmount;
+
         marginTx =
           await positionRouter.populateTransaction.createIncreasePositionETH(
             path,
@@ -769,7 +814,7 @@ export default class GmxV1Service implements IExchange {
             ethers.constants.HashZero, // Referral code set during setup()
             ethers.constants.AddressZero,
             {
-              value: BigNumber.from(this.EXECUTION_FEE).add(marginAmount),
+              value: this.EXECUTION_FEE.add(marginAmount),
             }
           );
       } else {
@@ -786,7 +831,7 @@ export default class GmxV1Service implements IExchange {
             ethers.constants.HashZero, // Referral code set during setup()
             ethers.constants.AddressZero,
             {
-              value: BigNumber.from(this.EXECUTION_FEE),
+              value: this.EXECUTION_FEE,
             }
           );
       }
@@ -820,7 +865,12 @@ export default class GmxV1Service implements IExchange {
         );
     }
 
-    txs.push(marginTx);
+    txs.push({
+      tx: marginTx,
+      type: "GMX_V1",
+      data: undefined,
+      ethRequired: await this.getEthRequired(provider, extraEthReq),
+    });
 
     return txs;
   }
@@ -833,8 +883,8 @@ export default class GmxV1Service implements IExchange {
     triggerPrice: BigNumber | undefined,
     triggerAboveThreshold: boolean | undefined,
     outputToken: Token | undefined
-  ): Promise<UnsignedTransaction[]> {
-    let txs: UnsignedTransaction[] = [];
+  ): Promise<UnsignedTxWithMetadata[]> {
+    let txs: UnsignedTxWithMetadata[] = [];
     let indexAddress = this.getIndexTokenAddressFromPositionKey(
       position.indexOrIdentifier
     );
@@ -903,7 +953,12 @@ export default class GmxV1Service implements IExchange {
             value: this.EXECUTION_FEE,
           }
         );
-      txs.push(createOrderTx);
+      txs.push({
+        tx: createOrderTx,
+        type: "GMX_V1",
+        data: undefined,
+        ethRequired: await this.getEthRequired(provider),
+      });
     } else {
       const orderBook = OrderBook__factory.connect(
         getContract(ARBITRUM, "OrderBook")!,
@@ -923,7 +978,12 @@ export default class GmxV1Service implements IExchange {
             value: this.EXECUTION_FEE,
           }
         );
-      txs.push(createOrderTx);
+      txs.push({
+        tx: createOrderTx,
+        type: "GMX_V1",
+        data: undefined,
+        ethRequired: await this.getEthRequired(provider),
+      });
     }
 
     return txs;
@@ -935,108 +995,302 @@ export default class GmxV1Service implements IExchange {
 
   async getTradesHistory(
     user: string,
-    _: OpenMarkets | undefined
-  ): Promise<TradeHistory[]> {
-    let url = `${getServerBaseUrl(ARBITRUM)}/actions?account=${user}`;
-    const data = await (await fetch(url)).json();
+    _: OpenMarkets | undefined,
+    pageOptions: PageOptions | undefined
+  ): Promise<PaginatedRes<TradeHistory>> {
+    const results = await fetch(
+      "https://api.thegraph.com/subgraphs/name/nissoh/gmx-arbitrum",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `{
+          trades(first: 1000, where: {account: "${user.toLowerCase()}"}, orderBy: timestamp, orderDirection: desc ) {
+            id
+            key
+            fee
+            size
+            isLong
+            account
+            sizeDelta
+            timestamp
+            collateral
+            indexToken
+            realisedPnl
+            averagePrice
+            collateralToken
+            status
+            increaseList {
+              id
+              key
+              account
+              collateralDelta
+              collateralToken
+              fee
+              indexToken
+              isLong
+              price
+              sizeDelta
+              timestamp
+            }
+            decreaseList {
+              id
+              key
+              account
+              collateralDelta
+              collateralToken
+              fee
+              indexToken
+              isLong
+              price
+              sizeDelta
+              timestamp
+            }
+            updateList {
+              id
+              key
+              realisedPnl
+              averagePrice
+              collateral
+              entryFundingRate
+              markPrice
+              reserveAmount
+              size
+              timestamp
+            }
+            closedPosition {
+              id
+              key
+              averagePrice
+              collateral
+              entryFundingRate
+              realisedPnl
+              reserveAmount
+              size
+              timestamp
+            }
+            liquidatedPosition {
+              id
+              key
+              account
+              collateral
+              collateralToken
+              indexToken
+              isLong
+              markPrice
+              realisedPnl
+              reserveAmount
+              size
+              timestamp
+            }
+          }
+        }
+      `,
+        }),
+      }
+    );
 
-    const trades: TradeHistory[] = [];
+    const resultJson = await results.json();
+    // console.dir({ resultJson }, { depth: 10 });
+    // console.log(resultJson.data.trades.length)
 
-    for (const each of data) {
-      const params = JSON.parse(each.data.params);
+    const tradeHistory: TradeHistory[] = [];
 
-      const isLong = params.order?.isLong || params.isLong;
+    for (const each of resultJson.data.trades) {
+      const increaseList = each.increaseList;
+      const decreaseList = each.decreaseList;
+      const updateList = each.updateList;
+      const closedPosition = each.closedPosition;
 
-      let keeperFeesPaid = undefined;
+      if (!!increaseList) {
+        for (const incTrade of increaseList) {
+          if (BigNumber.from(incTrade.sizeDelta).eq(0)) continue; // Add collateral trades
 
-      if (params.feeBasisPoints && params.sizeDelta) {
-        keeperFeesPaid = BigNumber.from(params.sizeDelta)
-          .mul(params.feeBasisPoints)
-          .div(10_000);
+          let txHash = (incTrade.id as string).split(":")[2];
+          let realisedPnl = undefined;
+
+          for (const update of updateList) {
+            if ((update.id as string).split(":")[2] == txHash) {
+              realisedPnl = BigNumber.from(update.realisedPnl);
+              break;
+            }
+          }
+
+          tradeHistory.push({
+            marketIdentifier: incTrade.indexToken,
+            collateralToken: this.convertToToken(
+              getToken(ARBITRUM, incTrade.collateralToken)
+            ),
+            direction: incTrade.isLong ? "LONG" : "SHORT",
+            sizeDelta: BigNumber.from(incTrade.sizeDelta),
+            price: BigNumber.from(incTrade.price),
+            collateralDelta: BigNumber.from(incTrade.collateralDelta),
+            realisedPnl: realisedPnl,
+            keeperFeesPaid: BigNumber.from(0),
+            positionFee: BigNumber.from(incTrade.fee), // does not include keeper fee
+            txHash: txHash,
+            timestamp: incTrade.timestamp as number,
+            operation: incTrade.isLong ? "Open Long" : "Open Short",
+          });
+        }
       }
 
-      const t: TradeHistory = {
-        marketIdentifier: { indexOrIdentifier: each.id },
-        timestamp: each.data.timestamp,
-        operation: each.data.action,
-        sizeDelta: params.order?.sizeDelta || params.sizeDelta || params.size,
-        direction: isLong ? (isLong === true ? "LONG" : "SHORT") : isLong,
-        price:
-          params.order?.acceptablePrice ||
-          params.order?.triggerPrice ||
-          params.acceptablePrice ||
-          params.price,
-        collateralDelta:
-          params.order?.collateralDelta ||
-          params.collateralDelta ||
-          BigNumber.from(0),
-        realisedPnl: BigNumber.from(0),
-        keeperFeesPaid: keeperFeesPaid || params.order?.executionFee,
-        isTriggerAboveThreshold: params.order?.triggerAboveThreshold,
-        txHash: each.data.txhash,
-      };
+      if (!!decreaseList) {
+        for (const decTrade of decreaseList) {
+          if (BigNumber.from(decTrade.sizeDelta).eq(0)) continue; // Remove collateral trades
 
-      trades.push(t);
+          let txHash = (decTrade.id as string).split(":")[2];
+          let realisedPnl = undefined;
+          let collateralDelta = BigNumber.from(decTrade.collateralDelta);
+
+          for (const update of updateList) {
+            if ((update.id as string).split(":")[2] == txHash) {
+              realisedPnl = BigNumber.from(update.realisedPnl);
+              break;
+            }
+          }
+          if (!!closedPosition) {
+            if ((closedPosition.id as string).split(":")[2] == txHash) {
+              realisedPnl = BigNumber.from(closedPosition.realisedPnl);
+              collateralDelta = BigNumber.from(each.collateral);
+            }
+          }
+
+          tradeHistory.push({
+            marketIdentifier: decTrade.indexToken,
+            collateralToken: this.convertToToken(
+              getToken(ARBITRUM, decTrade.collateralToken)
+            ),
+            direction: decTrade.isLong ? "LONG" : "SHORT",
+            sizeDelta: BigNumber.from(decTrade.sizeDelta),
+            price: BigNumber.from(decTrade.price),
+            collateralDelta: collateralDelta,
+            realisedPnl: realisedPnl,
+            keeperFeesPaid: BigNumber.from(0), // ether terms
+            positionFee: BigNumber.from(decTrade.fee), // does not include keeper fee
+            txHash: txHash,
+            timestamp: decTrade.timestamp as number,
+            operation: decTrade.isLong ? "Close Long" : "Close Short",
+          });
+        }
+      }
     }
 
-    return trades;
+    tradeHistory.sort((a, b) => {
+      return b.timestamp - a.timestamp;
+    });
+
+    if (tradeHistory.length > 0) {
+      let from = new Date(
+        tradeHistory[tradeHistory.length - 1].timestamp * 1000
+      );
+      from.setUTCHours(0, 0, 0, 0);
+      const fromTS = from.getTime() / 1000;
+
+      let to = new Date(tradeHistory[0].timestamp * 1000);
+      to.setUTCHours(24, 0, 0, 0);
+      const toTS = to.getTime() / 1000;
+
+      try {
+        type BenchmarkData = {
+          t: number[];
+          o: number[];
+        };
+
+        let pricesData: BenchmarkData;
+
+        const ethPriceUrl = `https://benchmarks.pyth.network/v1/shims/tradingview/history?symbol=Crypto.ETH/USD&resolution=D&from=${fromTS}&to=${toTS}`;
+        pricesData = await fetch(ethPriceUrl).then((d) => d.json());
+        let priceMap = new Array<number>();
+
+        for (const i in pricesData.t) {
+          priceMap.push(pricesData.o[i]);
+        }
+        // console.log("PriceMapLength: ", priceMap.length, "Price map: ", priceMap);
+
+        for (const each of tradeHistory) {
+          const ts = each.timestamp;
+          const days = Math.floor((ts - fromTS) / 86400);
+          const etherPrice = ethers.utils.parseUnits(
+            priceMap[days].toString(),
+            18
+          );
+          const PRECISION = BigNumber.from(10).pow(30);
+
+          each.keeperFeesPaid = this.EXECUTION_FEE.mul(PRECISION)
+            .mul(etherPrice)
+            .div(ethers.constants.WeiPerEther)
+            .div(ethers.constants.WeiPerEther);
+        }
+      } catch (e) {
+        console.log("<Gmx trade history> Error fetching price data: ", e);
+      }
+    }
+
+    return getPaginatedResponse(tradeHistory, pageOptions);
   }
 
   async getLiquidationsHistory(
     user: string,
-    openMarkers: OpenMarkets | undefined
-  ): Promise<TradeHistory[]> {
-    let url = `${getServerBaseUrl(ARBITRUM)}/actions?account=${user}`;
-    const data = await (await fetch(url)).json();
-
-    const trades: TradeHistory[] = [];
-
-    for (const each of data) {
-      const params = JSON.parse(each.data.params);
-
-      const isLong = params.order?.isLong || params.isLong;
-
-      let keeperFeesPaid = undefined;
-
-      if (params.feeBasisPoints && params.sizeDelta) {
-        keeperFeesPaid = BigNumber.from(params.sizeDelta)
-          .mul(params.feeBasisPoints)
-          .div(10_000);
+    _: OpenMarkets | undefined,
+    pageOptions: PageOptions | undefined
+  ): Promise<PaginatedRes<LiquidationHistory>> {
+    const results = await fetch(
+      "https://api.thegraph.com/subgraphs/name/gmx-io/gmx-stats",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `{
+            liquidatedPositions(where: {account: "${user.toLowerCase()}"}) {
+              id
+              loss
+              size
+              isLong
+              markPrice
+              borrowFee
+              timestamp
+              collateral
+              indexToken
+              averagePrice
+              collateralToken
+            }
+          }
+      `,
+        }),
       }
+    );
 
-      const t: TradeHistory = {
-        marketIdentifier: { indexOrIdentifier: each.id },
-        timestamp: each.data.timestamp,
-        operation: each.data.action,
-        sizeDelta: params.order?.sizeDelta || params.sizeDelta || params.size,
-        direction:
-          typeof isLong === "undefined"
-            ? isLong
-            : isLong === true
-            ? "LONG"
-            : "SHORT",
-        price:
-          params.order?.acceptablePrice ||
-          params.order?.triggerPrice ||
-          params.acceptablePrice ||
-          params.price ||
-          params.markPrice,
-        collateralDelta:
-          params.order?.collateralDelta ||
-          params.collateralDelta ||
-          BigNumber.from(0),
-        realisedPnl: BigNumber.from(0),
-        keeperFeesPaid: keeperFeesPaid || params.order?.executionFee,
-        isTriggerAboveThreshold: params.order?.triggerAboveThreshold,
-        txHash: each.data.txhash,
-      };
+    const resultJson = await results.json();
 
-      trades.push(t);
+    const liquidationHistory: LiquidationHistory[] = [];
+
+    for (const each of resultJson.data.liquidatedPositions) {
+      liquidationHistory.push({
+        marketIdentifier: each.indexToken,
+        collateralToken: this.convertToToken(
+          getToken(ARBITRUM, each.collateralToken)
+        ),
+        liquidationPrice: BigNumber.from(each.markPrice),
+        sizeClosed: BigNumber.from(each.size),
+        direction: each.isLong ? "LONG" : "SHORT",
+        realisedPnl: BigNumber.from(each.collateral).mul(-1),
+        liquidationFees: BigNumber.from(LIQUIDATION_FEE_USD),
+        remainingCollateral: BigNumber.from(0),
+        //100x
+        liqudationLeverage: {
+          value: "100000000",
+          decimals: 6,
+        },
+        timestamp: each.timestamp,
+      });
     }
 
-    return trades.filter((t) =>
-      t.operation.toLowerCase().includes("liquidate")
-    );
+    liquidationHistory.sort((a, b) => {
+      return b.timestamp - a.timestamp;
+    });
+
+    return getPaginatedResponse(liquidationHistory, pageOptions);
   }
 
   getIdleMargins(user: string): Promise<(MarketIdentifier & CollateralData)[]> {
@@ -1072,7 +1326,7 @@ export default class GmxV1Service implements IExchange {
       this.getMarketPrice,
       this.convertToToken,
       order,
-      BigNumber.from(this.EXECUTION_FEE),
+      this.EXECUTION_FEE,
       existingPosition
     );
   }
@@ -1091,7 +1345,7 @@ export default class GmxV1Service implements IExchange {
       provider,
       position,
       closeSize,
-      BigNumber.from(this.EXECUTION_FEE),
+      this.EXECUTION_FEE,
       isTrigger,
       triggerPrice,
       outputToken ? this.convertToGToken(outputToken) : undefined,
@@ -1112,7 +1366,7 @@ export default class GmxV1Service implements IExchange {
       marginDelta,
       isDeposit,
       this.convertToToken,
-      BigNumber.from(this.EXECUTION_FEE)
+      this.EXECUTION_FEE
     );
   }
 
@@ -1426,5 +1680,15 @@ export default class GmxV1Service implements IExchange {
     // });
 
     return [...increaseOrders, ...decreaseOrders];
+  }
+
+  async getEthRequired(
+    provider: Provider,
+    extraEthReq: BigNumber = BigNumber.from(0)
+  ): Promise<BigNumber | undefined> {
+    const ethBalance = await provider.getBalance(this.swAddr);
+    const ethRequired = this.EXECUTION_FEE.add(extraEthReq);
+
+    if (ethBalance.lt(ethRequired)) return ethRequired.sub(ethBalance).add(1);
   }
 }
