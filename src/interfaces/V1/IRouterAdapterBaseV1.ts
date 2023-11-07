@@ -85,7 +85,7 @@ export type OrderIdentifier = {
 export type CreateOrder = OrderData &
   CollateralData & {
     type: CreateOrderType
-    slippage: string | undefined
+    slippage: number | undefined
   }
 
 export type UpdateOrder = OrderData &
@@ -196,47 +196,47 @@ export type PaginatedRes<T> = {
 
 export type UnsignedTxWithMetadata =
   | {
-      tx: UnsignedTransaction
-      type: 'ERC20_APPROVAL'
-      data: ERC20ApprovalAddtionalSessionData
-      ethRequired?: BigNumber
-    }
+    tx: UnsignedTransaction
+    type: 'ERC20_APPROVAL'
+    data: ERC20ApprovalAddtionalSessionData
+    ethRequired?: BigNumber
+  }
   | {
-      tx: UnsignedTransaction
-      type: 'GMX_V1'
-      data: undefined
-      ethRequired?: BigNumber
-    }
+    tx: UnsignedTransaction
+    type: 'GMX_V1'
+    data: undefined
+    ethRequired?: BigNumber
+  }
   | {
-      tx: UnsignedTransaction
-      type: 'LIFI'
-      data: undefined
-      ethRequired?: BigNumber
-    }
+    tx: UnsignedTransaction
+    type: 'LIFI'
+    data: undefined
+    ethRequired?: BigNumber
+  }
   | {
-      tx: UnsignedTransaction
-      type: 'SNX_V2'
-      data: undefined
-      ethRequired?: BigNumber
-    }
+    tx: UnsignedTransaction
+    type: 'SNX_V2'
+    data: undefined
+    ethRequired?: BigNumber
+  }
   | {
-      tx: UnsignedTransaction
-      type: 'NATIVE'
-      data: undefined
-      ethRequired?: BigNumber
-    }
+    tx: UnsignedTransaction
+    type: 'NATIVE'
+    data: undefined
+    ethRequired?: BigNumber
+  }
   | {
-      tx: UnsignedTransaction
-      type: 'ADDRESS'
-      data: AddressValidationAdditionalSessionData
-      ethRequired?: BigNumber
-    }
+    tx: UnsignedTransaction
+    type: 'ADDRESS'
+    data: AddressValidationAdditionalSessionData
+    ethRequired?: BigNumber
+  }
   | {
-      tx: UnsignedTransaction
-      type: 'PER_V2'
-      data: undefined
-      ethRequired?: BigNumber
-    }
+    tx: UnsignedTransaction
+    type: 'GMX_V2'
+    data: undefined
+    ethRequired?: BigNumber
+  }
 
 export interface IRouterAdapterBaseV1 {
   ///// Setup api //////
