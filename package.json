@@ -2,7 +2,9 @@
   "name": "perp-aggregator-sdk",
   "scripts": {
     "fmt": "prettier --write src sdk test",
-    "build": "cd sdk && pnpm i && rm -f tsconfig.tsbuildinfo && pnpm tsc -b && cd .. && pnpm i && pnpm tsc"
+    "build": "cd sdk && pnpm i && rm -f tsconfig.tsbuildinfo && pnpm tsc -b && cd .. && pnpm i && pnpm tsc",
+    "tsc": "tsc --resolveJsonModule",
+    "start": "node dist/src/server/server.js"
   },
   "devDependencies": {
     "@types/node": "^20.4.6",
