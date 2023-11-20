@@ -1,3 +1,5 @@
-import RouterV1 from "../../../router/RouterV1"
+import RouterV1 from '../../../router/RouterV1'
 
-export const router = new RouterV1()
+const routerV1 = new RouterV1()
+
+export default routerV1

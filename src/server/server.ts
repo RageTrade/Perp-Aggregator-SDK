@@ -2,6 +2,7 @@ import bodyParser from 'body-parser'
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
+import testApi from './routes/api/testApi'
 
 const app = express()
 
@@ -26,6 +27,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.get('/', (_req, res) => {
   res.send('API Running')
 })
+app.use('/api/testApi', testApi)
 
 const port = app.get('port')
 const server = app.listen(port, () => console.log(`Server started on port ${port}`))
