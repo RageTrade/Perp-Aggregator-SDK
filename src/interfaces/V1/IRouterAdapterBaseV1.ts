@@ -234,66 +234,14 @@ export type PaginatedRes<T> = {
   maxItemsCount: number
 }
 
-export type UnsignedTxWithMetadata =
-  | {
-      tx: UnsignedTransaction
-      type: 'ERC20_APPROVAL'
-      data: ERC20ApprovalAddtionalSessionData
-      ethRequired?: BigNumber
-      chainId: number
-    }
-  | {
-      tx: UnsignedTransaction
-      type: 'GMX_V1'
-      data: undefined
-      ethRequired?: BigNumber
-      chainId: number
-    }
-  | {
-      tx: UnsignedTransaction
-      type: 'LIFI'
-      data: undefined
-      ethRequired?: BigNumber
-      chainId: number
-    }
-  | {
-      tx: UnsignedTransaction
-      type: 'SNX_V2'
-      data: undefined
-      ethRequired?: BigNumber
-      chainId: number
-    }
-  | {
-      tx: UnsignedTransaction
-      type: 'NATIVE'
-      data: undefined
-      ethRequired?: BigNumber
-      chainId: number
-    }
-  | {
-      tx: UnsignedTransaction
-      type: 'ADDRESS'
-      data: AddressValidationAdditionalSessionData
-      ethRequired?: BigNumber
-      chainId: number
-    }
-  | {
-      tx: UnsignedTransaction
-      type: 'GMX_V2'
-      data: undefined
-      ethRequired?: BigNumber
-      chainId: number
-    }
+export type UnsignedTxWithMetadata = {
+  tx: UnsignedTransaction
+  chainId: number
+}
 
 export type RouterAdapterMethod = keyof IRouterAdapterBaseV1
 
 export interface IRouterAdapterBaseV1 {
-  ///// Init Api //////
-  init(swAddr: string, opts?: ApiOpts): Promise<void>
-
-  ///// Setup api //////
-  setup(): Promise<UnsignedTxWithMetadata[]>
-
   ///// Network api //////
   supportedChains(opts?: ApiOpts): Chain[]
 
@@ -307,21 +255,23 @@ export interface IRouterAdapterBaseV1 {
   getDynamicMarketMetadata(marketIds: Market['marketId'][], opts?: ApiOpts): Promise<DynamicMarketMetadata[]>
 
   ///// Action api's //////
-  increasePosition(orderData: CreateOrder[], opts?: ApiOpts): Promise<UnsignedTxWithMetadata[]>
+  increasePosition(orderData: CreateOrder[], wallet: string, opts?: ApiOpts): Promise<UnsignedTxWithMetadata[]>
 
-  updateOrder(orderData: UpdateOrder[], opts?: ApiOpts): Promise<UnsignedTxWithMetadata[]>
+  updateOrder(orderData: UpdateOrder[], wallet: string, opts?: ApiOpts): Promise<UnsignedTxWithMetadata[]>
 
-  cancelOrder(orderData: CancelOrder[], opts?: ApiOpts): Promise<UnsignedTxWithMetadata[]>
+  cancelOrder(orderData: CancelOrder[], wallet: string, opts?: ApiOpts): Promise<UnsignedTxWithMetadata[]>
 
   closePosition(
     positionInfo: PositionInfo[],
     closePositionData: ClosePositionData[],
+    wallet: string,
     opts?: ApiOpts
   ): Promise<UnsignedTxWithMetadata[]>
 
   updatePositionMargin(
     positionInfo: PositionInfo[],
     updatePositionMarginData: UpdatePositionMarginData[],
+    wallet: string,
     opts?: ApiOpts
   ): Promise<UnsignedTxWithMetadata[]>
 

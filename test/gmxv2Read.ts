@@ -92,8 +92,6 @@ async function increasePosition() {
   const updateOrders: UpdateOrder[] = []
   const cancelOrders: CancelOrder[] = []
 
-  await ex.init('0x92B54cA40F1d7aca2E9c140176fabC1f7D7B387A')
-  await ex.setup()
   await ex.supportedMarkets(ex.supportedChains())
 
   // pass size delta in usd terms and margin delta in token terms
@@ -350,25 +348,21 @@ async function testReferralCache() {
 }
 
 async function testGetClaimableFundingFees() {
-  await ex.init('0x92B54cA40F1d7aca2E9c140176fabC1f7D7B387A')
   const res = await ex.getTotalClaimableFunding('0x2f88a09ed4174750a464576FE49E586F90A34820')
   console.dir({ res }, { depth: 4 })
 }
 
 async function testClaimFundingFees() {
-  await ex.init('0x92B54cA40F1d7aca2E9c140176fabC1f7D7B387A')
   const res = await ex.claimFunding('0x2f88a09ed4174750a464576FE49E586F90A34820')
   console.dir({ res }, { depth: 4 })
 }
 
 async function testRouterGetClaimableFundingFees() {
-  await rt.init('0x92B54cA40F1d7aca2E9c140176fabC1f7D7B387A')
   const res = await rt.getTotalClaimableFunding('0x2f88a09ed4174750a464576FE49E586F90A34820')
   console.dir({ res }, { depth: 4 })
 }
 
 async function test() {
-  await ex.init('0x92B54cA40F1d7aca2E9c140176fabC1f7D7B387A')
   for (let i = 0; i < 1; i++) {
     await testRouterGetClaimableFundingFees()
     console.log('\n')
