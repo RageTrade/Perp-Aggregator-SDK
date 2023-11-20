@@ -174,15 +174,14 @@ export type LiquidationInfo = CollateralData & {
   txHash: string | undefined // currently undefined for snx
 }
 
-export type ClaimInfo = 
-  {
-    marketId: Market['marketId'],
-    timestamp: number
-    token: Token
-    amount: AmountInfo
-    claimType: ClaimType
-    txHash: string
-  }
+export type ClaimInfo = {
+  marketId: Market['marketId']
+  timestamp: number
+  token: Token
+  amount: AmountInfo
+  claimType: ClaimType
+  txHash: string
+}
 
 export type ClosePositionData = {
   closeSize: AmountInfo
@@ -229,65 +228,16 @@ export type PaginatedRes<T> = {
   maxItemsCount: number
 }
 
-export type UnsignedTxWithMetadata =
-  | {
-      tx: UnsignedTransaction
-      type: 'ERC20_APPROVAL'
-      data: ERC20ApprovalAddtionalSessionData
-      ethRequired?: BigNumber
-      chainId: number
-    }
-  | {
-      tx: UnsignedTransaction
-      type: 'GMX_V1'
-      data: undefined
-      ethRequired?: BigNumber
-      chainId: number
-    }
-  | {
-      tx: UnsignedTransaction
-      type: 'LIFI'
-      data: undefined
-      ethRequired?: BigNumber
-      chainId: number
-    }
-  | {
-      tx: UnsignedTransaction
-      type: 'SNX_V2'
-      data: undefined
-      ethRequired?: BigNumber
-      chainId: number
-    }
-  | {
-      tx: UnsignedTransaction
-      type: 'NATIVE'
-      data: undefined
-      ethRequired?: BigNumber
-      chainId: number
-    }
-  | {
-      tx: UnsignedTransaction
-      type: 'ADDRESS'
-      data: AddressValidationAdditionalSessionData
-      ethRequired?: BigNumber
-      chainId: number
-    }
-  | {
-      tx: UnsignedTransaction
-      type: 'GMX_V2'
-      data: undefined
-      ethRequired?: BigNumber
-      chainId: number
-    }
+export type UnsignedTxWithMetadata = {
+  tx: UnsignedTransaction
+  chainId: number
+}
 
 export type RouterAdapterMethod = keyof IRouterAdapterBaseV1
 
 export interface IRouterAdapterBaseV1 {
   ///// Init Api //////
-  init(swAddr: string): Promise<void>
-
-  ///// Setup api //////
-  setup(): Promise<UnsignedTxWithMetadata[]>
+  init(): Promise<void>
 
   ///// Network api //////
   supportedChains(): Chain[]
@@ -302,17 +252,22 @@ export interface IRouterAdapterBaseV1 {
   getDynamicMarketMetadata(marketIds: Market['marketId'][]): Promise<DynamicMarketMetadata[]>
 
   ///// Action api's //////
-  increasePosition(orderData: CreateOrder[]): Promise<UnsignedTxWithMetadata[]>
+  increasePosition(orderData: CreateOrder[], wallet: string): Promise<UnsignedTxWithMetadata[]>
 
-  updateOrder(orderData: UpdateOrder[]): Promise<UnsignedTxWithMetadata[]>
+  updateOrder(orderData: UpdateOrder[], wallet: string): Promise<UnsignedTxWithMetadata[]>
 
-  cancelOrder(orderData: CancelOrder[]): Promise<UnsignedTxWithMetadata[]>
+  cancelOrder(orderData: CancelOrder[], wallet: string): Promise<UnsignedTxWithMetadata[]>
 
-  closePosition(positionInfo: PositionInfo[], closePositionData: ClosePositionData[]): Promise<UnsignedTxWithMetadata[]>
+  closePosition(
+    positionInfo: PositionInfo[],
+    closePositionData: ClosePositionData[],
+    wallet: string
+  ): Promise<UnsignedTxWithMetadata[]>
 
   updatePositionMargin(
     positionInfo: PositionInfo[],
-    updatePositionMarginData: UpdatePositionMarginData[]
+    updatePositionMarginData: UpdatePositionMarginData[],
+    wallet: string
   ): Promise<UnsignedTxWithMetadata[]>
 
   claimFunding(wallet: string): Promise<UnsignedTxWithMetadata[]>

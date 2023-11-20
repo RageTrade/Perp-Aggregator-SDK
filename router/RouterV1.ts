@@ -65,23 +65,13 @@ export default class RouterV1 implements IRouterV1 {
     return getPaginatedResponse(result, pageOptions)
   }
 
-  async init(swAddr: string): Promise<void> {
+  async init(): Promise<void> {
     const initPromises: Promise<void>[] = []
     for (const key in this.adapters) {
-      initPromises.push(this.adapters[key].init(swAddr))
+      initPromises.push(this.adapters[key].init())
     }
     await Promise.all(initPromises)
     return Promise.resolve()
-  }
-
-  async setup(): Promise<UnsignedTxWithMetadata[]> {
-    const setupPromises: Promise<UnsignedTxWithMetadata[]>[] = []
-    for (const key in this.adapters) {
-      setupPromises.push(this.adapters[key].setup())
-    }
-    const out = await Promise.all(setupPromises)
-
-    return out.flat()
   }
 
   supportedProtocols(): Protocol[] {
@@ -135,53 +125,57 @@ export default class RouterV1 implements IRouterV1 {
     const out = await Promise.all(promises)
     return out.flat()
   }
-  async increasePosition(orderData: CreateOrder[]): Promise<UnsignedTxWithMetadata[]> {
+  async increasePosition(orderData: CreateOrder[], wallet: string): Promise<UnsignedTxWithMetadata[]> {
     const promises = []
     for (const order of orderData) {
       const protocolId = this._checkAndGetProtocolId(order.marketId)
-      promises.push(this.adapters[protocolId].increasePosition([order]))
+      promises.push(this.adapters[protocolId].increasePosition([order], wallet))
     }
     const out = await Promise.all(promises)
     return out.flat()
   }
-  async updateOrder(orderData: UpdateOrder[]): Promise<UnsignedTxWithMetadata[]> {
+  async updateOrder(orderData: UpdateOrder[], wallet: string): Promise<UnsignedTxWithMetadata[]> {
     const promises = []
     for (const order of orderData) {
       const protocolId = this._checkAndGetProtocolId(order.marketId)
-      promises.push(this.adapters[protocolId].updateOrder([order]))
+      promises.push(this.adapters[protocolId].updateOrder([order], wallet))
     }
     const out = await Promise.all(promises)
     return out.flat()
   }
-  async cancelOrder(orderData: CancelOrder[]): Promise<UnsignedTxWithMetadata[]> {
+  async cancelOrder(orderData: CancelOrder[], wallet: string): Promise<UnsignedTxWithMetadata[]> {
     const promises = []
     for (const order of orderData) {
       const protocolId = this._checkAndGetProtocolId(order.marketId)
-      promises.push(this.adapters[protocolId].cancelOrder([order]))
+      promises.push(this.adapters[protocolId].cancelOrder([order], wallet))
     }
     const out = await Promise.all(promises)
     return out.flat()
   }
   async closePosition(
     positionInfo: PositionInfo[],
-    closePositionData: ClosePositionData[]
+    closePositionData: ClosePositionData[],
+    wallet: string
   ): Promise<UnsignedTxWithMetadata[]> {
     const promises: Promise<UnsignedTxWithMetadata[]>[] = []
     positionInfo.forEach((position, index) => {
       const protocolId = this._checkAndGetProtocolId(position.marketId)
-      promises.push(this.adapters[protocolId].closePosition([position], [closePositionData[index]]))
+      promises.push(this.adapters[protocolId].closePosition([position], [closePositionData[index]], wallet))
     })
     const out = await Promise.all(promises)
     return out.flat()
   }
   async updatePositionMargin(
     positionInfo: PositionInfo[],
-    updatePositionMarginData: UpdatePositionMarginData[]
+    updatePositionMarginData: UpdatePositionMarginData[],
+    wallet: string
   ): Promise<UnsignedTxWithMetadata[]> {
     const promises: Promise<UnsignedTxWithMetadata[]>[] = []
     positionInfo.forEach((position, index) => {
       const protocolId = this._checkAndGetProtocolId(position.marketId)
-      promises.push(this.adapters[protocolId].updatePositionMargin([position], [updatePositionMarginData[index]]))
+      promises.push(
+        this.adapters[protocolId].updatePositionMargin([position], [updatePositionMarginData[index]], wallet)
+      )
     })
     const out = await Promise.all(promises)
     return out.flat()
