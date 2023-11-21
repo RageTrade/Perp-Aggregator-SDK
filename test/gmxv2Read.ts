@@ -373,9 +373,6 @@ async function test() {
 }
 
 async function testAllRead() {
-  await ex.init('0xb23B8CBf691011f5C4c30e4CbD99eE670548143d')
-  await ex.setup()
-
   for (let i = 0; i < 5; i++) {
     // console.time("supportedChains")
     // console.log("supported chains")
