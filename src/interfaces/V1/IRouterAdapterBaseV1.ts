@@ -234,11 +234,6 @@ export type PaginatedRes<T> = {
   maxItemsCount: number
 }
 
-export type UnsignedTxWithMetadata = {
-  tx: UnsignedTransaction
-  chainId: number
-}
-
 export type RouterAdapterMethod = keyof IRouterAdapterBaseV1
 
 export interface IRouterAdapterBaseV1 {
@@ -255,27 +250,27 @@ export interface IRouterAdapterBaseV1 {
   getDynamicMarketMetadata(marketIds: Market['marketId'][], opts?: ApiOpts): Promise<DynamicMarketMetadata[]>
 
   ///// Action api's //////
-  increasePosition(orderData: CreateOrder[], wallet: string, opts?: ApiOpts): Promise<UnsignedTxWithMetadata[]>
+  increasePosition(orderData: CreateOrder[], wallet: string, opts?: ApiOpts): Promise<UnsignedTransaction[]>
 
-  updateOrder(orderData: UpdateOrder[], wallet: string, opts?: ApiOpts): Promise<UnsignedTxWithMetadata[]>
+  updateOrder(orderData: UpdateOrder[], wallet: string, opts?: ApiOpts): Promise<UnsignedTransaction[]>
 
-  cancelOrder(orderData: CancelOrder[], wallet: string, opts?: ApiOpts): Promise<UnsignedTxWithMetadata[]>
+  cancelOrder(orderData: CancelOrder[], wallet: string, opts?: ApiOpts): Promise<UnsignedTransaction[]>
 
   closePosition(
     positionInfo: PositionInfo[],
     closePositionData: ClosePositionData[],
     wallet: string,
     opts?: ApiOpts
-  ): Promise<UnsignedTxWithMetadata[]>
+  ): Promise<UnsignedTransaction[]>
 
   updatePositionMargin(
     positionInfo: PositionInfo[],
     updatePositionMarginData: UpdatePositionMarginData[],
     wallet: string,
     opts?: ApiOpts
-  ): Promise<UnsignedTxWithMetadata[]>
+  ): Promise<UnsignedTransaction[]>
 
-  claimFunding(wallet: string, opts?: ApiOpts): Promise<UnsignedTxWithMetadata[]>
+  claimFunding(wallet: string, opts?: ApiOpts): Promise<UnsignedTransaction[]>
 
   ///// Fetching api's //////
   getIdleMargins(

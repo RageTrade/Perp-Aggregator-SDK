@@ -4,7 +4,6 @@ import {
   MarketInfo,
   DynamicMarketMetadata,
   CreateOrder,
-  UnsignedTxWithMetadata,
   UpdateOrder,
   CancelOrder,
   PositionInfo,
@@ -34,6 +33,7 @@ import GMXV2Service from '../src/exchanges/gmxv2'
 import { getPaginatedResponse } from '../src/common/helper'
 import { decodeMarketId } from '../src/common/markets'
 import { FixedNumber } from '../src/common/fixedNumber'
+import { UnsignedTransaction } from 'ethers'
 
 export default class RouterV1 implements IRouterV1 {
   adapters: Record<string, IRouterAdapterBaseV1> = {}
@@ -125,7 +125,7 @@ export default class RouterV1 implements IRouterV1 {
     const out = await Promise.all(promises)
     return out.flat()
   }
-  async increasePosition(orderData: CreateOrder[], wallet: string): Promise<UnsignedTxWithMetadata[]> {
+  async increasePosition(orderData: CreateOrder[], wallet: string): Promise<UnsignedTransaction[]> {
     const promises = []
     for (const order of orderData) {
       const protocolId = this._checkAndGetProtocolId(order.marketId)
@@ -134,7 +134,7 @@ export default class RouterV1 implements IRouterV1 {
     const out = await Promise.all(promises)
     return out.flat()
   }
-  async updateOrder(orderData: UpdateOrder[], wallet: string): Promise<UnsignedTxWithMetadata[]> {
+  async updateOrder(orderData: UpdateOrder[], wallet: string): Promise<UnsignedTransaction[]> {
     const promises = []
     for (const order of orderData) {
       const protocolId = this._checkAndGetProtocolId(order.marketId)
@@ -143,7 +143,7 @@ export default class RouterV1 implements IRouterV1 {
     const out = await Promise.all(promises)
     return out.flat()
   }
-  async cancelOrder(orderData: CancelOrder[], wallet: string): Promise<UnsignedTxWithMetadata[]> {
+  async cancelOrder(orderData: CancelOrder[], wallet: string): Promise<UnsignedTransaction[]> {
     const promises = []
     for (const order of orderData) {
       const protocolId = this._checkAndGetProtocolId(order.marketId)
@@ -156,8 +156,8 @@ export default class RouterV1 implements IRouterV1 {
     positionInfo: PositionInfo[],
     closePositionData: ClosePositionData[],
     wallet: string
-  ): Promise<UnsignedTxWithMetadata[]> {
-    const promises: Promise<UnsignedTxWithMetadata[]>[] = []
+  ): Promise<UnsignedTransaction[]> {
+    const promises: Promise<UnsignedTransaction[]>[] = []
     positionInfo.forEach((position, index) => {
       const protocolId = this._checkAndGetProtocolId(position.marketId)
       promises.push(this.adapters[protocolId].closePosition([position], [closePositionData[index]], wallet))
@@ -169,8 +169,8 @@ export default class RouterV1 implements IRouterV1 {
     positionInfo: PositionInfo[],
     updatePositionMarginData: UpdatePositionMarginData[],
     wallet: string
-  ): Promise<UnsignedTxWithMetadata[]> {
-    const promises: Promise<UnsignedTxWithMetadata[]>[] = []
+  ): Promise<UnsignedTransaction[]> {
+    const promises: Promise<UnsignedTransaction[]>[] = []
     positionInfo.forEach((position, index) => {
       const protocolId = this._checkAndGetProtocolId(position.marketId)
       promises.push(
@@ -180,8 +180,8 @@ export default class RouterV1 implements IRouterV1 {
     const out = await Promise.all(promises)
     return out.flat()
   }
-  async claimFunding(wallet: string): Promise<UnsignedTxWithMetadata[]> {
-    const claimPromises: Promise<UnsignedTxWithMetadata[]>[] = []
+  async claimFunding(wallet: string): Promise<UnsignedTransaction[]> {
+    const claimPromises: Promise<UnsignedTransaction[]>[] = []
     for (const key in this.adapters) {
       claimPromises.push(this.adapters[key].claimFunding(wallet))
     }

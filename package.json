@@ -2,9 +2,7 @@
   "name": "perp-aggregator-sdk",
   "scripts": {
     "fmt": "prettier --write src sdk test",
-    "build": "cd sdk && pnpm i && rm -f tsconfig.tsbuildinfo && pnpm tsc -b && cd .. && pnpm i && pnpm tsc",
-    "tsc": "tsc --resolveJsonModule",
-    "start": "node dist/src/server/server.js"
+    "build": "cd sdk && pnpm i && rm -f tsconfig.tsbuildinfo && pnpm tsc -b && cd .. && pnpm i && pnpm tsc"
   },
   "devDependencies": {
     "@types/node": "^20.4.6",
@@ -12,10 +10,7 @@
     "execution-time-decorators": "^2.0.3",
     "prettier": "^2.8.8",
     "ts-node": "^10.9.1",
-    "typescript": "^5.1.6",
-    "@types/express": "^4.17.14",
-    "@types/body-parser": "^1.19.2",
-    "@types/cors": "^2.8.13"
+    "typescript": "^5.1.6"
   },
   "dependencies": {
     "@apollo/client": "3.5.6",
@@ -29,12 +24,7 @@
     "ethers": "^5.7.2",
     "ethers-v6": "npm:ethers@6.8.0",
     "perennial-sdk-ts": "^0.1.7",
-    "viem": "^1.18.1",
-    "express": "^4.18.2",
-    "http-status-codes": "^2.2.0",
-    "cors": "^2.8.5",
-    "helmet": "^7.0.0",
-    "express-async-handler": "^1.2.0"
+    "viem": "^1.18.1"
   },
   "version": "1.0.0",
   "license": "MIT"

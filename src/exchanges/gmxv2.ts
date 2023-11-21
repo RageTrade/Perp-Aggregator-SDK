@@ -3,7 +3,6 @@ import {
   MarketInfo,
   DynamicMarketMetadata,
   CreateOrder,
-  UnsignedTxWithMetadata,
   UpdateOrder,
   CancelOrder,
   PositionInfo,
@@ -44,8 +43,8 @@ import { Token, tokens } from '../common/tokens'
 import { applySlippage, getPaginatedResponse, toAmountInfo, getBNFromFN } from '../common/helper'
 import { Chain, arbitrum } from 'viem/chains'
 import { GMX_V2_TOKEN, GMX_V2_TOKENS, getGmxV2TokenByAddress } from '../configs/gmxv2/gmxv2Tokens'
-import { formatUnits, parseUnits } from 'ethers/lib/utils'
-import { hashedPositionKey } from '../configs/gmxv2/config/dataStore'
+import { UnsignedTransaction, formatUnits, parseUnits } from 'ethers/lib/utils'
+import { hashedPositionKey, openInterestKey } from '../configs/gmxv2/config/dataStore'
 import { ContractMarketPrices } from '../configs/gmxv2/markets/types'
 import { useMarketsInfo } from '../configs/gmxv2/markets/useMarketsInfo'
 import { usePositionsInfo } from '../configs/gmxv2/positions/usePositionsInfo'
@@ -298,7 +297,7 @@ export default class GmxV2Service implements IAdapterV1 {
     return metadata
   }
 
-  async _approveIfNeeded(token: string, amount: bigint, wallet: string): Promise<UnsignedTxWithMetadata | undefined> {
+  async _approveIfNeeded(token: string, amount: bigint, wallet: string): Promise<UnsignedTransaction | undefined> {
     if (token == ethers.constants.AddressZero) return
 
     const tokenContract = IERC20__factory.connect(token, this.provider)
@@ -308,11 +307,9 @@ export default class GmxV2Service implements IAdapterV1 {
     if (allowance.gt(amount)) return
 
     const tx = await tokenContract.populateTransaction.approve(this.ROUTER_ADDR, ethers.constants.MaxUint256)
+    tx.chainId = arbitrum.id
 
-    return {
-      tx: tx,
-      chainId: arbitrum.id
-    }
+    return tx
   }
 
   _mapOrderType(orderType: OrderType, orderDirection: OrderDirection) {
@@ -321,8 +318,8 @@ export default class GmxV2Service implements IAdapterV1 {
 
   ///// Action api's //////
 
-  async increasePosition(orderData: CreateOrder[], wallet: string): Promise<UnsignedTxWithMetadata[]> {
-    const txs: UnsignedTxWithMetadata[] = []
+  async increasePosition(orderData: CreateOrder[], wallet: string): Promise<UnsignedTransaction[]> {
+    const txs: UnsignedTransaction[] = []
 
     // checks for min collateral, min leverage should be done in preview or f/e
 
@@ -422,19 +419,16 @@ export default class GmxV2Service implements IAdapterV1 {
       const multicallEncoded = await this.exchangeRouter.populateTransaction.multicall(multicallData, {
         value: orderTx.value
       })
+      multicallEncoded.chainId = arbitrum.id
 
-      // add metadata for txs
-      txs.push({
-        tx: multicallEncoded,
-        chainId: arbitrum.id
-      })
+      txs.push(multicallEncoded)
     }
 
     return txs
   }
 
-  async updateOrder(orderData: UpdateOrder[]): Promise<UnsignedTxWithMetadata[]> {
-    const txs: UnsignedTxWithMetadata[] = []
+  async updateOrder(orderData: UpdateOrder[]): Promise<UnsignedTransaction[]> {
+    const txs: UnsignedTransaction[] = []
 
     for (const od of orderData) {
       // get order details
@@ -491,19 +485,16 @@ export default class GmxV2Service implements IAdapterV1 {
       // encode as multicall
       // no msg.value for now but eth can be supplied to unfreeeze frozen orders
       const multicallEncoded = await this.exchangeRouter.populateTransaction.multicall([orderTx.data!])
+      multicallEncoded.chainId = arbitrum.id
 
-      // add metadata for txs
-      txs.push({
-        tx: multicallEncoded,
-        chainId: arbitrum.id
-      })
+      txs.push(multicallEncoded)
     }
 
     return txs
   }
 
-  async cancelOrder(orderData: CancelOrder[]): Promise<UnsignedTxWithMetadata[]> {
-    const txs: UnsignedTxWithMetadata[] = []
+  async cancelOrder(orderData: CancelOrder[]): Promise<UnsignedTransaction[]> {
+    const txs: UnsignedTransaction[] = []
 
     for (const od of orderData) {
       // get order details
@@ -514,12 +505,9 @@ export default class GmxV2Service implements IAdapterV1 {
 
       // encode as multicall
       const multicallEncoded = await this.exchangeRouter.populateTransaction.multicall([orderTx.data!])
+      multicallEncoded.chainId = arbitrum.id
 
-      // add metadata for txs
-      txs.push({
-        tx: multicallEncoded,
-        chainId: arbitrum.id
-      })
+      txs.push(multicallEncoded)
     }
 
     return txs
@@ -529,8 +517,8 @@ export default class GmxV2Service implements IAdapterV1 {
     positionInfo: PositionInfo[],
     closePositionData: ClosePositionData[],
     wallet: string
-  ): Promise<UnsignedTxWithMetadata[]> {
-    const txs: UnsignedTxWithMetadata[] = []
+  ): Promise<UnsignedTransaction[]> {
+    const txs: UnsignedTransaction[] = []
 
     if (positionInfo.length !== closePositionData.length) throw new Error('position close data mismatch')
 
@@ -626,12 +614,9 @@ export default class GmxV2Service implements IAdapterV1 {
       const multicallEncoded = await this.exchangeRouter.populateTransaction.multicall(multicallData, {
         value: orderTx.value
       })
+      multicallEncoded.chainId = arbitrum.id
 
-      // add metadata for txs
-      txs.push({
-        tx: multicallEncoded,
-        chainId: arbitrum.id
-      })
+      txs.push(multicallEncoded)
     }
 
     return txs
@@ -641,8 +626,8 @@ export default class GmxV2Service implements IAdapterV1 {
     positionInfo: PositionInfo[],
     updatePositionMarginData: UpdatePositionMarginData[],
     wallet: string
-  ): Promise<UnsignedTxWithMetadata[]> {
-    const txs: UnsignedTxWithMetadata[] = []
+  ): Promise<UnsignedTransaction[]> {
+    const txs: UnsignedTransaction[] = []
 
     if (positionInfo.length !== updatePositionMarginData.length) throw new Error('position close data mismatch')
 
@@ -735,19 +720,16 @@ export default class GmxV2Service implements IAdapterV1 {
       const multicallEncoded = await this.exchangeRouter.populateTransaction.multicall(multicallData, {
         value: orderTx.value
       })
+      multicallEncoded.chainId = arbitrum.id
 
-      // add metadata for txs
-      txs.push({
-        tx: multicallEncoded,
-        chainId: arbitrum.id
-      })
+      txs.push(multicallEncoded)
     }
 
     return txs
   }
 
-  async claimFunding(wallet: string): Promise<UnsignedTxWithMetadata[]> {
-    let txs: UnsignedTxWithMetadata[] = []
+  async claimFunding(wallet: string): Promise<UnsignedTransaction[]> {
+    let txs: UnsignedTransaction[] = []
 
     const { marketsInfoData, tokensData, pricesUpdatedAt } = await useMarketsInfo(ARBITRUM, wallet)
     const markets = Object.values(marketsInfoData ?? {})
@@ -776,12 +758,9 @@ export default class GmxV2Service implements IAdapterV1 {
 
       // encode as multicall
       const multicallEncoded = await this.exchangeRouter.populateTransaction.multicall([claimFundingTx.data!])
+      multicallEncoded.chainId = arbitrum.id
 
-      // add metadata for txs
-      txs.push({
-        tx: multicallEncoded,
-        chainId: arbitrum.id
-      })
+      txs.push(multicallEncoded)
     }
 
     return txs
