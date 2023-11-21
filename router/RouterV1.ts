@@ -24,7 +24,8 @@ import {
   Market,
   RouterAdapterMethod,
   PositionData,
-  ClaimInfo
+  ClaimInfo,
+  IdleMarginInfo
 } from '../src/interfaces/V1/IRouterAdapterBaseV1'
 import { IRouterV1 } from '../src/interfaces/V1/IRouterV1'
 import { protocols } from '../src/common/protocols'
@@ -188,22 +189,8 @@ export default class RouterV1 implements IRouterV1 {
     const out = await Promise.all(claimPromises)
     return out.flat()
   }
-  async getIdleMargins(wallet: string): Promise<
-    Array<
-      CollateralData & {
-        marketId: Market['marketId']
-        amount: FixedNumber // Always token terms
-      }
-    >
-  > {
-    const promises: Promise<
-      Array<
-        CollateralData & {
-          marketId: Market['marketId']
-          amount: FixedNumber // Always token terms
-        }
-      >
-    >[] = []
+  async getIdleMargins(wallet: string): Promise<Array<IdleMarginInfo>> {
+    const promises: Promise<Array<IdleMarginInfo>>[] = []
     for (const key in this.adapters) {
       promises.push(this.adapters[key].getIdleMargins(wallet))
     }

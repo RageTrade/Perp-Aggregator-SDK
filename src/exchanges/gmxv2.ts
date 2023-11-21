@@ -37,7 +37,7 @@ import {
   Reader
 } from '../../typechain/gmx-v2'
 import { BigNumber, ethers } from 'ethers'
-import { OrderType, ApiOpts } from '../interfaces/V1/IRouterAdapterBaseV1'
+import { OrderType, IdleMarginInfo, ApiOpts } from '../interfaces/V1/IRouterAdapterBaseV1'
 import { OrderDirection, Provider } from '../interface'
 import { Token, tokens } from '../common/tokens'
 import { applySlippage, getPaginatedResponse, toAmountInfo, getBNFromFN } from '../common/helper'
@@ -766,7 +766,7 @@ export default class GmxV2Service implements IAdapterV1 {
     return txs
   }
 
-  getIdleMargins(wallet: string): Promise<(CollateralData & { marketId: Market['marketId']; amount: FixedNumber })[]> {
+  getIdleMargins(wallet: string): Promise<Array<IdleMarginInfo>> {
     throw new Error('Method not implemented.')
   }
 

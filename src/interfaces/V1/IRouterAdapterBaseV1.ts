@@ -6,7 +6,6 @@ import { arbitrum, optimism } from 'viem/chains'
 import { protocols } from '../../common/protocols'
 import { FixedNumber } from '../../common/fixedNumber'
 
-// TODO - implement for all api's. Curretly done for preview based internal functions
 export type ApiOpts = {
   bypassCache: boolean // bypass query client cache altogether
   overrideStaleTime?: number // pass the stale time to override default stale time
@@ -224,6 +223,11 @@ export type CloseTradePreviewInfo = PreviewInfo & {
   receiveMargin: AmountInfo
 }
 
+export type IdleMarginInfo = CollateralData & {
+  marketId: Market['marketId']
+  amount: FixedNumber // Always token terms
+}
+
 export type PageOptions = {
   limit: number
   skip: number
@@ -237,25 +241,84 @@ export type PaginatedRes<T> = {
 export type RouterAdapterMethod = keyof IRouterAdapterBaseV1
 
 export interface IRouterAdapterBaseV1 {
-  ///// Network api //////
+  /**
+   * Retrieve list of supported chains
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {Chain[]} list of supported chains
+   */
   supportedChains(opts?: ApiOpts): Chain[]
 
   ///// Market api's //////
+
+  /**
+   * Retrieve list of supported markets for the given chains
+   * @param {Chain[] | undefined} chains Chains to filter on. If undefined, returns all supported markets
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {MarketInfo[]} list of supported markets
+   */
   supportedMarkets(chains: Chain[] | undefined, opts?: ApiOpts): Promise<MarketInfo[]>
 
+  /**
+   * Retrieve market prices for the market
+   * @param {String[]} marketIds array of marketIds
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {FixedNumber[]} array of market prices
+   */
   getMarketPrices(marketIds: Market['marketId'][], opts?: ApiOpts): Promise<FixedNumber[]>
 
+  /**
+   * Retrieve market info for given marketIds
+   * @param {String[]} marketIds array of marketIds
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {MarketInfo[]} array of market info
+   */
   getMarketsInfo(marketIds: Market['marketId'][], opts?: ApiOpts): Promise<MarketInfo[]>
 
+  /**
+   * Retrive dynamic market metadata for given marketIds
+   * @param {String[]} marketIds array of marketIds
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {DynamicMarketMetadata[]} array of dynamic market metadata
+   */
   getDynamicMarketMetadata(marketIds: Market['marketId'][], opts?: ApiOpts): Promise<DynamicMarketMetadata[]>
 
   ///// Action api's //////
+
+  /**
+   * Retrieve create position transactions
+   * @param {CreateOrder[]} orderData Array of order data for creating multiple positions
+   * @param {String} wallet Wallet address
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {UnsignedTransaction[]} array of create position transactions
+   */
   increasePosition(orderData: CreateOrder[], wallet: string, opts?: ApiOpts): Promise<UnsignedTransaction[]>
 
+  /**
+   * Retrieve update position transactions
+   * @param {UpdateOrder[]} orderData Array of order data for updating multiple positions
+   * @param {String} wallet Wallet address
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {UnsignedTransaction[]} array of update position transactions
+   */
   updateOrder(orderData: UpdateOrder[], wallet: string, opts?: ApiOpts): Promise<UnsignedTransaction[]>
 
+  /**
+   * Retrieve cancel order transactions
+   * @param {CancelOrder[]} orderData Array of order data for cancelling multiple orders
+   * @param {String} wallet Wallet address
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {UnsignedTransaction[]} array of cancel order transactions
+   */
   cancelOrder(orderData: CancelOrder[], wallet: string, opts?: ApiOpts): Promise<UnsignedTransaction[]>
 
+  /**
+   * Retrieve close position transactions
+   * @param {PositionInfo[]} positionInfo Array of existing position info
+   * @param {ClosePositionData[]} closePositionData Array of close position data
+   * @param {String} wallet Wallet address
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {UnsignedTransaction[]} array of close position transactions
+   */
   closePosition(
     positionInfo: PositionInfo[],
     closePositionData: ClosePositionData[],
@@ -263,6 +326,14 @@ export interface IRouterAdapterBaseV1 {
     opts?: ApiOpts
   ): Promise<UnsignedTransaction[]>
 
+  /**
+   * Retrieve add/remove collateral transactions
+   * @param {PositionInfo[]} positionInfo Array of existing position info
+   * @param {UpdatePositionMarginData[]} updatePositionMarginData Array of update position margin data
+   * @param {String} wallet Wallet address
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {UnsignedTransaction[]} array of add/remove collateral transactions
+   */
   updatePositionMargin(
     positionInfo: PositionInfo[],
     updatePositionMarginData: UpdatePositionMarginData[],
@@ -270,29 +341,54 @@ export interface IRouterAdapterBaseV1 {
     opts?: ApiOpts
   ): Promise<UnsignedTransaction[]>
 
+  /**
+   * Retrieve claim funding transactions
+   * @param {String} wallet Wallet address
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {UnsignedTransaction[]} array of claim funding transactions
+   */
   claimFunding(wallet: string, opts?: ApiOpts): Promise<UnsignedTransaction[]>
 
   ///// Fetching api's //////
-  getIdleMargins(
-    wallet: string,
-    opts?: ApiOpts
-  ): Promise<
-    Array<
-      CollateralData & {
-        marketId: Market['marketId']
-        amount: FixedNumber // Always token terms
-      }
-    >
-  >
 
+  /**
+   * Retrieve idle margins (collateral that is not being used for any position) for the given wallet
+   * @param {String} wallet Wallet address
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {IdleMarginInfo[]} array of idle margins
+   */
+  getIdleMargins(wallet: string, opts?: ApiOpts): Promise<Array<IdleMarginInfo>>
+
+  /**
+   * Retrieve all open positions for a wallet
+   * @param {String} wallet Wallet address
+   * @param {PageOptions | undefined} pageOptions Pagination options
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {PaginatedRes<PositionInfo>} paginated result of open positions
+   */
   getAllPositions(
     wallet: string,
     pageOptions: PageOptions | undefined,
     opts?: ApiOpts
   ): Promise<PaginatedRes<PositionInfo>>
 
+  /**
+   * Retrieve all orders for a wallet
+   * @param {String} wallet Wallet address
+   * @param {PageOptions | undefined} pageOptions Pagination options
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {PaginatedRes<OrderInfo>} paginated result of orders
+   */
   getAllOrders(wallet: string, pageOptions: PageOptions | undefined, opts?: ApiOpts): Promise<PaginatedRes<OrderInfo>>
 
+  /**
+   * Retrieve all orders for a position
+   * @param {String} wallet Wallet address
+   * @param {PositionInfo[]} positionInfo Array of existing position info
+   * @param {PageOptions | undefined} pageOptions Pagination options
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {Record<PositionData['posId'], PaginatedRes<OrderInfo>>} Record of paginated result of orders for each position
+   */
   getAllOrdersForPosition(
     wallet: string,
     positionInfo: PositionInfo[],
@@ -300,19 +396,53 @@ export interface IRouterAdapterBaseV1 {
     opts?: ApiOpts
   ): Promise<Record<PositionData['posId'], PaginatedRes<OrderInfo>>>
 
+  /**
+   * Retrieve all trades for a wallet
+   * @param {String} wallet Wallet address
+   * @param {PageOptions | undefined} pageOptions Pagination options
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {PaginatedRes<HistoricalTradeInfo>} paginated result of trades
+   */
   getTradesHistory(
     wallet: string,
     pageOptions: PageOptions | undefined,
     opts?: ApiOpts
   ): Promise<PaginatedRes<HistoricalTradeInfo>>
 
+  /**
+   * Retrieve all liquidations for a wallet
+   * @param {String} wallet Wallet address
+   * @param {PageOptions | undefined} pageOptions Pagination options
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {PaginatedRes<LiquidationInfo>} paginated result of liquidations
+   */
   getLiquidationHistory(
     wallet: string,
     pageOptions: PageOptions | undefined,
     opts?: ApiOpts
   ): Promise<PaginatedRes<LiquidationInfo>>
 
-  getClaimHistory(wallet: string, pageOptions: PageOptions | undefined): Promise<PaginatedRes<ClaimInfo>>
+  /**
+   * Retrieve all funding fee claims for a wallet
+   * @param {String} wallet Wallet address
+   * @param {PageOptions | undefined} pageOptions Pagination options
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {PaginatedRes<ClaimInfo>} paginated result of claims
+   */
+  getClaimHistory(
+    wallet: string,
+    pageOptions: PageOptions | undefined,
+    opts?: ApiOpts
+  ): Promise<PaginatedRes<ClaimInfo>>
+
+  /**
+   * Retrieve simulatied previews for create position orders
+   * @param {String} wallet Wallet address
+   * @param {CreateOrder[]} orderData Array of order data for creating multiple positions
+   * @param {PositionInfo[]} existingPos Array of existing position info
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {OpenTradePreviewInfo[]} array of simulated previews
+   */
   getOpenTradePreview(
     wallet: string,
     orderData: CreateOrder[],
@@ -320,6 +450,14 @@ export interface IRouterAdapterBaseV1 {
     opts?: ApiOpts
   ): Promise<OpenTradePreviewInfo[]>
 
+  /**
+   * Retrieve simulatied previews for close position orders
+   * @param {String} wallet Wallet address
+   * @param {PositionInfo[]} positionInfo Array of existing position info
+   * @param {ClosePositionData[]} closePositionData Array of close position data
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {CloseTradePreviewInfo[]} array of simulated previews
+   */
   getCloseTradePreview(
     wallet: string,
     positionInfo: PositionInfo[],
@@ -327,6 +465,15 @@ export interface IRouterAdapterBaseV1 {
     opts?: ApiOpts
   ): Promise<CloseTradePreviewInfo[]>
 
+  /**
+   * Retrieve simulatied previews for update position margin orders
+   * @param {String} wallet Wallet address
+   * @param {Boolean[]} isDeposit Array of booleans indicating whether margin is being added or removed
+   * @param {AmountInfo[]} marginDelta Array of margin deltas
+   * @param {PositionInfo[]} existingPos Array of existing position info
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {PreviewInfo[]} array of simulated previews
+   */
   getUpdateMarginPreview(
     wallet: string,
     isDeposit: boolean[],
@@ -335,7 +482,19 @@ export interface IRouterAdapterBaseV1 {
     opts?: ApiOpts
   ): Promise<PreviewInfo[]>
 
-  getTotalClaimableFunding(wallet: string): Promise<FixedNumber>
+  /**
+   * Retrieve total claimable funding amounts
+   * @param {String} wallet Wallet address
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {FixedNumber} total claimable funding amount
+   */
+  getTotalClaimableFunding(wallet: string, opts?: ApiOpts): Promise<FixedNumber>
 
-  getTotalAccuredFunding(wallet: string): Promise<FixedNumber>
+  /**
+   * Retrieve total accured funding amounts
+   * @param {String} wallet Wallet address
+   * @param {ApiOpts} [opts] Extra Api options like bypassCache
+   * @returns {FixedNumber} total accured funding amount
+   */
+  getTotalAccuredFunding(wallet: string, opts?: ApiOpts): Promise<FixedNumber>
 }
