@@ -66,15 +66,6 @@ export default class RouterV1 implements IRouterV1 {
     return getPaginatedResponse(result, pageOptions)
   }
 
-  async init(): Promise<void> {
-    const initPromises: Promise<void>[] = []
-    for (const key in this.adapters) {
-      initPromises.push(this.adapters[key].init())
-    }
-    await Promise.all(initPromises)
-    return Promise.resolve()
-  }
-
   supportedProtocols(): Protocol[] {
     const protocolKeys = Object.keys(this.adapters)
     const out = protocolKeys.map((key) => {
@@ -100,7 +91,7 @@ export default class RouterV1 implements IRouterV1 {
     return out.flat()
   }
   async getMarketPrices(marketIds: Market['marketId'][]): Promise<FixedNumber[]> {
-    const promises = []
+    const promises: Array<Promise<FixedNumber[]>> = []
     for (const marketId of marketIds) {
       const protocolId = this._checkAndGetProtocolId(marketId)
       promises.push(this.adapters[protocolId].getMarketPrices(marketIds))
@@ -109,7 +100,7 @@ export default class RouterV1 implements IRouterV1 {
     return out.flat()
   }
   async getMarketsInfo(marketIds: Market['marketId'][]): Promise<MarketInfo[]> {
-    const promises = []
+    const promises: Array<Promise<MarketInfo[]>> = []
     for (const marketId of marketIds) {
       const protocolId = this._checkAndGetProtocolId(marketId)
       promises.push(this.adapters[protocolId].getMarketsInfo(marketIds))
@@ -118,7 +109,7 @@ export default class RouterV1 implements IRouterV1 {
     return out.flat()
   }
   async getDynamicMarketMetadata(marketIds: Market['marketId'][]): Promise<DynamicMarketMetadata[]> {
-    const promises = []
+    const promises: Array<Promise<DynamicMarketMetadata[]>> = []
     for (const marketId of marketIds) {
       const protocolId = this._checkAndGetProtocolId(marketId)
       promises.push(this.adapters[protocolId].getDynamicMarketMetadata(marketIds))
@@ -127,7 +118,7 @@ export default class RouterV1 implements IRouterV1 {
     return out.flat()
   }
   async increasePosition(orderData: CreateOrder[], wallet: string): Promise<UnsignedTransaction[]> {
-    const promises = []
+    const promises: Array<Promise<UnsignedTransaction[]>> = []
     for (const order of orderData) {
       const protocolId = this._checkAndGetProtocolId(order.marketId)
       promises.push(this.adapters[protocolId].increasePosition([order], wallet))
@@ -136,7 +127,7 @@ export default class RouterV1 implements IRouterV1 {
     return out.flat()
   }
   async updateOrder(orderData: UpdateOrder[], wallet: string): Promise<UnsignedTransaction[]> {
-    const promises = []
+    const promises: Array<Promise<UnsignedTransaction[]>> = []
     for (const order of orderData) {
       const protocolId = this._checkAndGetProtocolId(order.marketId)
       promises.push(this.adapters[protocolId].updateOrder([order], wallet))
@@ -145,7 +136,7 @@ export default class RouterV1 implements IRouterV1 {
     return out.flat()
   }
   async cancelOrder(orderData: CancelOrder[], wallet: string): Promise<UnsignedTransaction[]> {
-    const promises = []
+    const promises: Array<Promise<UnsignedTransaction[]>> = []
     for (const order of orderData) {
       const protocolId = this._checkAndGetProtocolId(order.marketId)
       promises.push(this.adapters[protocolId].cancelOrder([order], wallet))
