@@ -62,7 +62,7 @@ array of cancel order transactions
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:312](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L312)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:312](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L312)
 
 ___
 
@@ -87,7 +87,7 @@ array of claim funding transactions
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:350](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L350)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:350](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L350)
 
 ___
 
@@ -114,7 +114,7 @@ array of close position transactions
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:322](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L322)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:322](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L322)
 
 ___
 
@@ -140,7 +140,7 @@ paginated result of orders
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:382](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L382)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:382](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L382)
 
 ___
 
@@ -167,7 +167,7 @@ Record of paginated result of orders for each position
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:392](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L392)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:392](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L392)
 
 ___
 
@@ -193,7 +193,7 @@ paginated result of open positions
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:369](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L369)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:369](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L369)
 
 ___
 
@@ -219,7 +219,7 @@ paginated result of claims
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:432](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L432)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:432](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L432)
 
 ___
 
@@ -246,7 +246,7 @@ array of simulated previews
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:461](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L461)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:461](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L461)
 
 ___
 
@@ -271,7 +271,7 @@ array of dynamic market metadata
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:283](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L283)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:283](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L283)
 
 ___
 
@@ -296,7 +296,7 @@ array of idle margins
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:360](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L360)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:360](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L360)
 
 ___
 
@@ -322,7 +322,7 @@ paginated result of liquidations
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:419](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L419)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:419](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L419)
 
 ___
 
@@ -347,7 +347,7 @@ array of market prices
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:267](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L267)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:267](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L267)
 
 ___
 
@@ -372,7 +372,7 @@ array of market info
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:275](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L275)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:275](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L275)
 
 ___
 
@@ -399,7 +399,7 @@ array of simulated previews
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:446](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L446)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:446](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L446)
 
 ___
 
@@ -424,7 +424,7 @@ total accured funding amount
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:499](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L499)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:499](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L499)
 
 ___
 
@@ -449,7 +449,7 @@ total claimable funding amount
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:491](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L491)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:491](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L491)
 
 ___
 
@@ -475,7 +475,7 @@ paginated result of trades
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:406](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L406)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:406](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L406)
 
 ___
 
@@ -503,7 +503,7 @@ array of simulated previews
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:477](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L477)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:477](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L477)
 
 ___
 
@@ -529,7 +529,7 @@ array of create position transactions
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:294](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L294)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:294](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L294)
 
 ___
 
@@ -553,7 +553,7 @@ list of supported chains
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:249](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L249)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:249](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L249)
 
 ___
 
@@ -578,7 +578,7 @@ list of supported markets
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:259](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L259)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:259](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L259)
 
 ___
 
@@ -604,7 +604,7 @@ array of update position transactions
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:303](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L303)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:303](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L303)
 
 ___
 
@@ -631,4 +631,4 @@ array of add/remove collateral transactions
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:337](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L337)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:337](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L337)

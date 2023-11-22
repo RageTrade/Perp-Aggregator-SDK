@@ -855,7 +855,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:14](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L14)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:14](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L14)
 
 ___
 
@@ -872,7 +872,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:9](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L9)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:9](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L9)
 
 ___
 
@@ -1108,7 +1108,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:131](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L131)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:131](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L131)
 
 ___
 
@@ -1394,7 +1394,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:182](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L182)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:182](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L182)
 
 ___
 
@@ -1404,7 +1404,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:31](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L31)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:31](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L31)
 
 ___
 
@@ -1502,7 +1502,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:21](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L21)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:21](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L21)
 
 ___
 
@@ -1521,7 +1521,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:191](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L191)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:191](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L191)
 
 ___
 
@@ -1531,7 +1531,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:222](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L222)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:222](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L222)
 
 ___
 
@@ -1547,7 +1547,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:105](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L105)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:105](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L105)
 
 ___
 
@@ -1691,7 +1691,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:114](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L114)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:114](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L114)
 
 ___
 
@@ -1701,7 +1701,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:19](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L19)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:19](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L19)
 
 ___
 
@@ -1830,7 +1830,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:74](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L74)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:74](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L74)
 
 ___
 
@@ -1936,7 +1936,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:203](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L203)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:203](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L203)
 
 ___
 
@@ -2476,7 +2476,7 @@ A description of a fixed-point arithmetic field.
 
 #### Defined in
 
-[src/common/fixedNumber.ts:93](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L93)
+[src/common/fixedNumber.ts:93](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L93)
 
 ___
 
@@ -2600,7 +2600,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:48](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L48)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:48](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L48)
 
 ___
 
@@ -3513,7 +3513,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:157](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L157)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:157](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L157)
 
 ___
 
@@ -3523,7 +3523,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:226](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L226)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:226](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L226)
 
 ___
 
@@ -3693,7 +3693,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:169](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L169)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:169](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L169)
 
 ___
 
@@ -3812,7 +3812,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:37](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L37)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:37](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L37)
 
 ___
 
@@ -3822,7 +3822,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:85](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L85)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:85](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L85)
 
 ___
 
@@ -3838,7 +3838,7 @@ ___
 
 #### Defined in
 
-[src/common/tokens.ts:3](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/tokens.ts#L3)
+[src/common/tokens.ts:3](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/tokens.ts#L3)
 
 ___
 
@@ -4302,7 +4302,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:218](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L218)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:218](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L218)
 
 ___
 
@@ -4312,7 +4312,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:25](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L25)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:25](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L25)
 
 ___
 
@@ -4322,7 +4322,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:101](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L101)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:101](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L101)
 
 ___
 
@@ -4339,7 +4339,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:109](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L109)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:109](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L109)
 
 ___
 
@@ -4349,7 +4349,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:125](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L125)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:125](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L125)
 
 ___
 
@@ -4359,7 +4359,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:23](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L23)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:23](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L23)
 
 ___
 
@@ -4376,7 +4376,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:231](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L231)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:231](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L231)
 
 ___
 
@@ -4399,7 +4399,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:236](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L236)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:236](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L236)
 
 ___
 
@@ -4578,7 +4578,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:135](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L135)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:135](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L135)
 
 ___
 
@@ -4588,7 +4588,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:151](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L151)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:151](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L151)
 
 ___
 
@@ -4694,7 +4694,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:208](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L208)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:208](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L208)
 
 ___
 
@@ -4756,7 +4756,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:33](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L33)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:33](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L33)
 
 ___
 
@@ -4766,7 +4766,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:27](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L27)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:27](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L27)
 
 ___
 
@@ -5630,7 +5630,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:94](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L94)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:94](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L94)
 
 ___
 
@@ -5640,7 +5640,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:87](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L87)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:87](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L87)
 
 ___
 
@@ -5650,7 +5650,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:29](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L29)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:29](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L29)
 
 ___
 
@@ -6181,7 +6181,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:89](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L89)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:89](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L89)
 
 ___
 
@@ -6412,7 +6412,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:120](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L120)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:120](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L120)
 
 ___
 
@@ -6422,7 +6422,7 @@ ___
 
 #### Defined in
 
-[src/interfaces/V1/IRouterAdapterBaseV1.ts:198](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/interfaces/V1/IRouterAdapterBaseV1.ts#L198)
+[src/interfaces/V1/IRouterAdapterBaseV1.ts:198](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/interfaces/V1/IRouterAdapterBaseV1.ts#L198)
 
 ___
 
@@ -7042,7 +7042,7 @@ ___
 
 #### Defined in
 
-[src/common/fixedNumber.ts:130](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L130)
+[src/common/fixedNumber.ts:130](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L130)
 
 ___
 

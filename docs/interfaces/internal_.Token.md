@@ -28,7 +28,7 @@
 
 #### Defined in
 
-[src/common/tokens.ts:9](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/tokens.ts#L9)
+[src/common/tokens.ts:9](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/tokens.ts#L9)
 
 ___
 
@@ -38,7 +38,7 @@ ___
 
 #### Defined in
 
-[src/common/tokens.ts:8](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/tokens.ts#L8)
+[src/common/tokens.ts:8](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/tokens.ts#L8)
 
 ___
 
@@ -48,7 +48,7 @@ ___
 
 #### Defined in
 
-[src/common/tokens.ts:7](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/tokens.ts#L7)
+[src/common/tokens.ts:7](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/tokens.ts#L7)
 
 ___
 
@@ -58,4 +58,4 @@ ___
 
 #### Defined in
 
-[src/common/tokens.ts:6](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/tokens.ts#L6)
+[src/common/tokens.ts:6](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/tokens.ts#L6)

@@ -115,7 +115,7 @@ A FixedNumber represents a value over its [[FixedFormat]]
 
 #### Defined in
 
-[src/common/fixedNumber.ts:281](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L281)
+[src/common/fixedNumber.ts:281](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L281)
 
 ## Properties
 
@@ -125,7 +125,7 @@ A FixedNumber represents a value over its [[FixedFormat]]
 
 #### Defined in
 
-[src/common/fixedNumber.ts:259](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L259)
+[src/common/fixedNumber.ts:259](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L259)
 
 ___
 
@@ -135,7 +135,7 @@ ___
 
 #### Defined in
 
-[src/common/fixedNumber.ts:265](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L265)
+[src/common/fixedNumber.ts:265](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L265)
 
 ___
 
@@ -145,7 +145,7 @@ ___
 
 #### Defined in
 
-[src/common/fixedNumber.ts:262](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L262)
+[src/common/fixedNumber.ts:262](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L262)
 
 ___
 
@@ -157,7 +157,7 @@ This is a property so console.log shows a human-meaningful value.
 
 #### Defined in
 
-[src/common/fixedNumber.ts:272](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L272)
+[src/common/fixedNumber.ts:272](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L272)
 
 ___
 
@@ -169,7 +169,7 @@ The specific fixed-point arithmetic field for this value.
 
 #### Defined in
 
-[src/common/fixedNumber.ts:257](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L257)
+[src/common/fixedNumber.ts:257](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L257)
 
 ## Accessors
 
@@ -185,7 +185,7 @@ The number of decimal places in the fixed-point arithment field.
 
 #### Defined in
 
-[src/common/fixedNumber.ts:313](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L313)
+[src/common/fixedNumber.ts:313](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L313)
 
 ___
 
@@ -202,7 +202,7 @@ If true, negative values are permitted, otherwise only
 
 #### Defined in
 
-[src/common/fixedNumber.ts:299](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L299)
+[src/common/fixedNumber.ts:299](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L299)
 
 ___
 
@@ -219,7 +219,7 @@ The value as an integer, based on the smallest unit the
 
 #### Defined in
 
-[src/common/fixedNumber.ts:321](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L321)
+[src/common/fixedNumber.ts:321](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L321)
 
 ___
 
@@ -235,7 +235,7 @@ The number of bits available to store the value.
 
 #### Defined in
 
-[src/common/fixedNumber.ts:306](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L306)
+[src/common/fixedNumber.ts:306](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L306)
 
 ## Methods
 
@@ -256,7 +256,7 @@ The number of bits available to store the value.
 
 #### Defined in
 
-[src/common/fixedNumber.ts:356](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L356)
+[src/common/fixedNumber.ts:356](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L356)
 
 ___
 
@@ -276,7 +276,7 @@ ___
 
 #### Defined in
 
-[src/common/fixedNumber.ts:325](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L325)
+[src/common/fixedNumber.ts:325](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L325)
 
 ___
 
@@ -297,7 +297,7 @@ ___
 
 #### Defined in
 
-[src/common/fixedNumber.ts:329](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L329)
+[src/common/fixedNumber.ts:329](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L329)
 
 ___
 
@@ -318,7 +318,7 @@ ___
 
 #### Defined in
 
-[src/common/fixedNumber.ts:438](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L438)
+[src/common/fixedNumber.ts:438](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L438)
 
 ___
 
@@ -339,7 +339,7 @@ ___
 
 #### Defined in
 
-[src/common/fixedNumber.ts:400](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L400)
+[src/common/fixedNumber.ts:400](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L400)
 
 ___
 
@@ -360,7 +360,7 @@ ___
 
 #### Defined in
 
-[src/common/fixedNumber.ts:378](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L378)
+[src/common/fixedNumber.ts:378](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L378)
 
 ___
 
@@ -384,7 +384,7 @@ Returns a new [[FixedNumber]] with the result of %%this%% added
 
 #### Defined in
 
-[src/common/fixedNumber.ts:374](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L374)
+[src/common/fixedNumber.ts:374](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L374)
 
 ___
 
@@ -407,7 +407,7 @@ Returns a new [[FixedNumber]] with the result of %%this%% added
 
 #### Defined in
 
-[src/common/fixedNumber.ts:365](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L365)
+[src/common/fixedNumber.ts:365](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L365)
 
 ___
 
@@ -426,7 +426,7 @@ Returns a new [[FixedNumber]] which is the smallest **integer**
 
 #### Defined in
 
-[src/common/fixedNumber.ts:572](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L572)
+[src/common/fixedNumber.ts:572](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L572)
 
 ___
 
@@ -452,7 +452,7 @@ Returns a comparison result between %%this%% and %%other%%.
 
 #### Defined in
 
-[src/common/fixedNumber.ts:494](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L494)
+[src/common/fixedNumber.ts:494](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L494)
 
 ___
 
@@ -476,7 +476,7 @@ Returns a new [[FixedNumber]] with the result of %%this%% divided
 
 #### Defined in
 
-[src/common/fixedNumber.ts:462](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L462)
+[src/common/fixedNumber.ts:462](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L462)
 
 ___
 
@@ -500,7 +500,7 @@ Returns a new [[FixedNumber]] with the result of %%this%% divided
 
 #### Defined in
 
-[src/common/fixedNumber.ts:471](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L471)
+[src/common/fixedNumber.ts:471](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L471)
 
 ___
 
@@ -524,7 +524,7 @@ Returns a new [[FixedNumber]] with the result of %%this%% divided
 
 #### Defined in
 
-[src/common/fixedNumber.ts:453](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L453)
+[src/common/fixedNumber.ts:453](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L453)
 
 ___
 
@@ -546,7 +546,7 @@ Returns true if %%other%% is equal to %%this%%.
 
 #### Defined in
 
-[src/common/fixedNumber.ts:519](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L519)
+[src/common/fixedNumber.ts:519](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L519)
 
 ___
 
@@ -565,7 +565,7 @@ Returns a new [[FixedNumber]] which is the largest **integer**
 
 #### Defined in
 
-[src/common/fixedNumber.ts:557](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L557)
+[src/common/fixedNumber.ts:557](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L557)
 
 ___
 
@@ -587,7 +587,7 @@ Returns true if %%other%% is greater than to %%this%%.
 
 #### Defined in
 
-[src/common/fixedNumber.ts:540](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L540)
+[src/common/fixedNumber.ts:540](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L540)
 
 ___
 
@@ -609,7 +609,7 @@ Returns true if %%other%% is greater than or equal to %%this%%.
 
 #### Defined in
 
-[src/common/fixedNumber.ts:547](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L547)
+[src/common/fixedNumber.ts:547](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L547)
 
 ___
 
@@ -625,7 +625,7 @@ Returns true if %%this%% is less than ``0``.
 
 #### Defined in
 
-[src/common/fixedNumber.ts:617](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L617)
+[src/common/fixedNumber.ts:617](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L617)
 
 ___
 
@@ -641,7 +641,7 @@ Returns true if %%this%% is equal to ``0``.
 
 #### Defined in
 
-[src/common/fixedNumber.ts:610](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L610)
+[src/common/fixedNumber.ts:610](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L610)
 
 ___
 
@@ -663,7 +663,7 @@ Returns true if %%other%% is less than to %%this%%.
 
 #### Defined in
 
-[src/common/fixedNumber.ts:526](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L526)
+[src/common/fixedNumber.ts:526](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L526)
 
 ___
 
@@ -685,7 +685,7 @@ Returns true if %%other%% is less than or equal to %%this%%.
 
 #### Defined in
 
-[src/common/fixedNumber.ts:533](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L533)
+[src/common/fixedNumber.ts:533](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L533)
 
 ___
 
@@ -709,7 +709,7 @@ Returns a new [[FixedNumber]] with the result of %%this%% multiplied
 
 #### Defined in
 
-[src/common/fixedNumber.ts:418](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L418)
+[src/common/fixedNumber.ts:418](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L418)
 
 ___
 
@@ -733,7 +733,7 @@ Returns a new [[FixedNumber]] with the result of %%this%% multiplied
 
 #### Defined in
 
-[src/common/fixedNumber.ts:427](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L427)
+[src/common/fixedNumber.ts:427](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L427)
 
 ___
 
@@ -756,7 +756,7 @@ Returns a new [[FixedNumber]] with the result of %%this%% multiplied
 
 #### Defined in
 
-[src/common/fixedNumber.ts:409](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L409)
+[src/common/fixedNumber.ts:409](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L409)
 
 ___
 
@@ -779,7 +779,7 @@ Returns a new [[FixedNumber]] with the decimal component
 
 #### Defined in
 
-[src/common/fixedNumber.ts:585](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L585)
+[src/common/fixedNumber.ts:585](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L585)
 
 ___
 
@@ -803,7 +803,7 @@ Returns a new [[FixedNumber]] with the result of %%other%% subtracted
 
 #### Defined in
 
-[src/common/fixedNumber.ts:396](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L396)
+[src/common/fixedNumber.ts:396](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L396)
 
 ___
 
@@ -826,7 +826,7 @@ Returns a new [[FixedNumber]] with the result of %%other%% subtracted
 
 #### Defined in
 
-[src/common/fixedNumber.ts:387](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L387)
+[src/common/fixedNumber.ts:387](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L387)
 
 ___
 
@@ -851,7 +851,7 @@ Return a new [[FixedNumber]] with the same value but has had
 
 #### Defined in
 
-[src/common/fixedNumber.ts:645](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L645)
+[src/common/fixedNumber.ts:645](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L645)
 
 ___
 
@@ -867,7 +867,7 @@ Returns the string representation of %%this%%.
 
 #### Defined in
 
-[src/common/fixedNumber.ts:624](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L624)
+[src/common/fixedNumber.ts:624](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L624)
 
 ___
 
@@ -887,7 +887,7 @@ Returns a float approximation.
 
 #### Defined in
 
-[src/common/fixedNumber.ts:635](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L635)
+[src/common/fixedNumber.ts:635](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L635)
 
 ___
 
@@ -914,7 +914,7 @@ Creates a new [[FixedNumber]] with the big-endian representation
 
 #### Defined in
 
-[src/common/fixedNumber.ts:724](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L724)
+[src/common/fixedNumber.ts:724](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L724)
 
 ___
 
@@ -940,7 +940,7 @@ Creates a new [[FixedNumber]] for %%value%% with %%format%%.
 
 #### Defined in
 
-[src/common/fixedNumber.ts:686](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L686)
+[src/common/fixedNumber.ts:686](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L686)
 
 ___
 
@@ -969,4 +969,4 @@ Creates a new [[FixedNumber]] for %%value%% divided by
 
 #### Defined in
 
-[src/common/fixedNumber.ts:657](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/2bee6d6/src/common/fixedNumber.ts#L657)
+[src/common/fixedNumber.ts:657](https://github.com/RageTrade/Perp-Aggregator-SDK/blob/583c661/src/common/fixedNumber.ts#L657)
