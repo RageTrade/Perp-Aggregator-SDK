@@ -27,6 +27,7 @@
     "ethers": "^5.7.2",
     "ethers-v6": "npm:ethers@6.8.0",
     "perennial-sdk-ts": "^0.1.7",
+    "typedoc-plugin-missing-exports": "^2.1.0",
     "viem": "^1.18.1"
   },
   "version": "1.0.0",
