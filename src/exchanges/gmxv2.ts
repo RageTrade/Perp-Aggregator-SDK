@@ -49,7 +49,6 @@ import { ContractMarketPrices } from '../configs/gmxv2/markets/types'
 import { useMarketsInfo } from '../configs/gmxv2/markets/useMarketsInfo'
 import { usePositionsInfo } from '../configs/gmxv2/positions/usePositionsInfo'
 import { ARBITRUM } from '../configs/gmx/chains'
-import { chains } from 'perennial-sdk-ts'
 import { useOrdersInfo } from '../configs/gmxv2/orders/useOrdersInfo'
 import { TriggerThresholdType } from '../configs/gmxv2/trade/types'
 import { PositionOrderInfo, isMarketOrderType, isOrderForPosition } from '../configs/gmxv2/orders'
@@ -142,7 +141,7 @@ export default class GmxV2Service implements IAdapterV1 {
   private minCollateralUsd = parseUnits('10', 30)
 
   supportedChains(): Chain[] {
-    return [chains[42161]]
+    return [arbitrum]
   }
 
   async _cachedMarkets(opts?: ApiOpts) {
@@ -174,7 +173,7 @@ export default class GmxV2Service implements IAdapterV1 {
 
           const market: Market = {
             marketId: encodeMarketId(arbitrum.id.toString(), 'GMXV2', mProp.marketToken),
-            chain: chains[42161],
+            chain: arbitrum,
             indexToken: getGmxV2TokenByAddress(mProp.indexToken),
             longCollateral: supportedCollateralTokens,
             shortCollateral: supportedCollateralTokens,
