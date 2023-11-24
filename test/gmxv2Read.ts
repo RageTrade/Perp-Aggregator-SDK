@@ -401,11 +401,12 @@ async function testAllRead() {
 async function testStaleAndCacheTime() {
   // staleTime = 5, cacheTime = 10 (5 * 2)
   let staleTime = CACHE_SECOND * 5
+  const isBypassCache = false
 
   // first time should come from fetchQuery
   console.time('first time')
   await ex.supportedMarkets(ex.supportedChains(), {
-    bypassCache: false,
+    bypassCache: isBypassCache,
     overrideStaleTime: staleTime
   })
   console.timeEnd('first time')
@@ -417,7 +418,7 @@ async function testStaleAndCacheTime() {
   // second time should come from cache because timeDiff < staleTime
   console.time('second time')
   await ex.supportedMarkets(ex.supportedChains(), {
-    bypassCache: false,
+    bypassCache: isBypassCache,
     overrideStaleTime: staleTime
   })
   console.timeEnd('second time')
@@ -429,7 +430,7 @@ async function testStaleAndCacheTime() {
   // third time should come from cache with prefetch because timeDiff > staleTime and timeDiff < cacheTime
   console.time('third time')
   await ex.supportedMarkets(ex.supportedChains(), {
-    bypassCache: false,
+    bypassCache: isBypassCache,
     overrideStaleTime: staleTime
   })
   console.timeEnd('third time')
@@ -441,7 +442,7 @@ async function testStaleAndCacheTime() {
   // fourth time should come from cache because timeDiff < staleTime
   console.time('fourth time')
   await ex.supportedMarkets(ex.supportedChains(), {
-    bypassCache: false,
+    bypassCache: isBypassCache,
     overrideStaleTime: staleTime
   })
   console.timeEnd('fourth time')
@@ -453,7 +454,7 @@ async function testStaleAndCacheTime() {
   // fifth time should come from fetchQuery because timeDiff > cacheTime
   console.time('fifth time')
   await ex.supportedMarkets(ex.supportedChains(), {
-    bypassCache: false,
+    bypassCache: isBypassCache,
     overrideStaleTime: staleTime
   })
   console.timeEnd('fifth time')
