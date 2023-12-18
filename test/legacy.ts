@@ -541,12 +541,12 @@ async function synService() {
   //   logObject("Trades History: ", t);
   // });
 
-  console.log('Synthetix')
-  for (let i = 0; i < 10; i++) {
-    const positions = (
-      await ss.getAllPositions('0xD81c12559fBfC78841bBFF3618eaB880646847BA', provider, undefined, undefined)
-    ).result
-  }
+  // console.log('Synthetix')
+  // for (let i = 0; i < 10; i++) {
+  //   const positions = (
+  //     await ss.getAllPositions('0xD81c12559fBfC78841bBFF3618eaB880646847BA', provider, undefined, undefined)
+  //   ).result
+  // }
   // positions.forEach((p) => logObject("Position: ", p));
   // logObject('Position: ', positions[0])
 
