@@ -86,7 +86,8 @@ async function getOpenTradePreview() {
     marginDelta: toAmountInfo(parseUnits('0.014', 18), 18, true),
     triggerData: {
       triggerPrice: (await ex.getMarketPrices([btcMarketId]))[0],
-      triggerAboveThreshold: false
+      triggerAboveThreshold: false,
+      triggerActivatePrice: undefined
     },
     collateral: getTokenBySymbol('ETH'),
     type: 'MARKET',
@@ -111,7 +112,8 @@ async function getCloseTradePreview() {
     type: 'TAKE_PROFIT',
     triggerData: {
       triggerPrice: FixedNumber.fromValue(parseUnits('40000', 30).toString(), 30, 30),
-      triggerAboveThreshold: true
+      triggerAboveThreshold: true,
+      triggerActivatePrice: undefined
     },
     outputCollateral: getTokenBySymbol('USDC')
   }
@@ -153,7 +155,8 @@ async function increasePosition() {
     triggerData: {
       // triggerPrice: (await ex.getMarketPrices([btcMarketId]))[0],
       triggerPrice: FixedNumber.fromValue(parseUnits('30000', 30).toString(), 30, 30),
-      triggerAboveThreshold: false
+      triggerAboveThreshold: false,
+      triggerActivatePrice: undefined
     },
     collateral: getTokenBySymbol('ETH'),
     type: 'LIMIT',
@@ -174,7 +177,8 @@ async function closePosition() {
     type: 'TAKE_PROFIT',
     triggerData: {
       triggerPrice: FixedNumber.fromValue(parseUnits('125936', 30).toString(), 30, 30),
-      triggerAboveThreshold: true
+      triggerAboveThreshold: true,
+      triggerActivatePrice: undefined
     },
     outputCollateral: getTokenBySymbol('USDC')
   }
