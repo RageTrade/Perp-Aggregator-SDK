@@ -46,7 +46,7 @@ const signer = new ethers.Wallet(wpk, provider)
 
 const sdk = new KwentaSDK({
   networkId: 10,
-  provider: rpc[10],
+  provider: rpc[10]
   // provider: new ethers.providers.JsonRpcProvider(
   //   'https://optimism.blockpi.network/v1/rpc/e9eb838be05076b18bceb9e7efe3797c93bed264',
   //   10

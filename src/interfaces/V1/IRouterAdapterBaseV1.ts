@@ -19,17 +19,25 @@ export type AmountInfo = {
 
 export type CreateOrderType = 'LIMIT' | 'MARKET' // IncreasePosition
 
-export type CloseOrderType = 'STOP_LOSS' | 'TAKE_PROFIT' | 'MARKET' // ClosePosition
+export type CloseOrderType =
+  | 'STOP_LOSS'
+  | 'TAKE_PROFIT'
+  | 'MARKET'
+  | 'STOP_LOSS_LIMIT'
+  | 'TAKE_PROFIT_LIMIT'
+  | 'REDUCE_LIMIT' // ClosePosition
 
 export type OrderType = CreateOrderType | CloseOrderType
 
 export type OrderAction = 'CREATE' | 'UPDATE' | 'CANCEL'
 
-export type ProtocolId = 'GMXV1' | 'SYNTHETIXV2' | 'PERV2' | 'GMXV2'
+export type ProtocolId = 'GMXV1' | 'SYNTHETIXV2' | 'PERV2' | 'GMXV2' | 'HL'
 
 export type TradeOperationType = 'Open Long' | 'Close Long' | 'Open Short' | 'Close Short' | 'Long' | 'Short'
 
 export type ClaimType = 'Funding'
+
+export type MarketMode = 'ISOLATED' | 'CROSS'
 
 export type Protocol = {
   protocolId: ProtocolId
@@ -41,6 +49,7 @@ export type Market = {
   indexToken: Token
   longCollateral: Token[]
   shortCollateral: Token[]
+  supportedModes: Record<MarketMode, Boolean>
   supportedOrderTypes: Record<OrderType, Boolean>
   supportedOrderActions: Record<OrderAction, Boolean>
   marketSymbol: string
@@ -90,6 +99,7 @@ export type TradeDirection = 'LONG' | 'SHORT'
 export type TriggerData = {
   triggerPrice: FixedNumber
   triggerAboveThreshold: boolean
+  triggerActivatePrice: FixedNumber | undefined
 }
 
 export type TradeData = {
@@ -292,6 +302,13 @@ export type UnsignedTxWithMetadata =
 
 export type RouterAdapterMethod = keyof IRouterAdapterBaseV1
 
+export type AccountInfo = {
+  accountValue: FixedNumber
+  totalMarginUsed: FixedNumber
+  crossMaintenanceMarginUsed: FixedNumber
+  withdrawable: FixedNumber
+}
+
 export interface IRouterAdapterBaseV1 {
   ///// Init Api //////
   init(swAddr: string, opts?: ApiOpts): Promise<void>
@@ -393,4 +410,6 @@ export interface IRouterAdapterBaseV1 {
   getTotalClaimableFunding(wallet: string, opts?: ApiOpts): Promise<FixedNumber>
 
   getTotalAccuredFunding(wallet: string, opts?: ApiOpts): Promise<FixedNumber>
+
+  getAccountInfo(wallet: string, opts?: ApiOpts): Promise<AccountInfo>
 }
