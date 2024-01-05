@@ -117,7 +117,7 @@ export default class RouterV1 implements IRouterV1 {
     const promises = []
     for (const marketId of marketIds) {
       const protocolId = this._checkAndGetProtocolId(marketId)
-      promises.push(this.adapters[protocolId].getMarketPrices(marketIds, opts))
+      promises.push(this.adapters[protocolId].getMarketPrices([marketId], opts))
     }
     const out = await Promise.all(promises)
     return out.flat()
@@ -126,7 +126,7 @@ export default class RouterV1 implements IRouterV1 {
     const promises = []
     for (const marketId of marketIds) {
       const protocolId = this._checkAndGetProtocolId(marketId)
-      promises.push(this.adapters[protocolId].getMarketsInfo(marketIds, opts))
+      promises.push(this.adapters[protocolId].getMarketsInfo([marketId], opts))
     }
     const out = await Promise.all(promises)
     return out.flat()
@@ -135,7 +135,7 @@ export default class RouterV1 implements IRouterV1 {
     const promises = []
     for (const marketId of marketIds) {
       const protocolId = this._checkAndGetProtocolId(marketId)
-      promises.push(this.adapters[protocolId].getDynamicMarketMetadata(marketIds, opts))
+      promises.push(this.adapters[protocolId].getDynamicMarketMetadata([marketId], opts))
     }
     const out = await Promise.all(promises)
     return out.flat()
