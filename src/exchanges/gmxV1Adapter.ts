@@ -209,7 +209,15 @@ export default class GmxV1Adapter implements IAdapterV1 {
   }
 
   async getMarketsInfo(marketIds: string[], opts?: ApiOpts | undefined): Promise<MarketInfo[]> {
-    return (await this.supportedMarkets(this.supportedChains(), opts)).filter((m) => marketIds.includes(m.marketId))
+    const result: MarketInfo[] = []
+    const markets = await this.supportedMarkets(this.supportedChains(), opts)
+
+    marketIds.forEach((marketId) => {
+      const market = markets.find((m) => m.marketId == marketId)!
+      result.push(market)
+    })
+
+    return result
   }
 
   async getMarketPrices(marketIds: string[], opts?: ApiOpts | undefined): Promise<FixedNumber[]> {
@@ -233,7 +241,13 @@ export default class GmxV1Adapter implements IAdapterV1 {
 
     const sTimeFI = getStaleTime(CACHE_SECOND * 30, opts)
     const fundingRateInfo = await cacheFetch({
-      key: [GMXV1_CACHE_PREFIX, 'fundingRateInfo'],
+      key: [
+        GMXV1_CACHE_PREFIX,
+        'getFundingRates',
+        nativeTokenAddress!,
+        tokenAddresses.join('-'),
+        getContract(ARBITRUM, 'Vault')!
+      ],
       fn: () => reader.getFundingRates(getContract(ARBITRUM, 'Vault')!, nativeTokenAddress!, tokenAddresses),
       staleTime: sTimeFI,
       cacheTime: sTimeFI * CACHE_TIME_MULT,
