@@ -65,6 +65,7 @@ import { timer } from 'execution-time-decorators'
 import { parseUnits } from 'ethers/lib/utils'
 import { ApiOpts } from '../interfaces/V1/IRouterAdapterBaseV1'
 import { CACHE_SECOND, CACHE_TIME_MULT, GMXV1_CACHE_PREFIX, cacheFetch, getStaleTime } from '../common/cache'
+import { ZERO } from '../common/constants'
 
 // taken from contract Vault.sol
 const LIQUIDATION_FEE_USD = BigNumber.from('5000000000000000000000000000000')
@@ -76,8 +77,8 @@ export default class GmxV1Service implements IExchange {
   private protocolIdentifier: PROTOCOL_NAME = 'GMX_V1'
   private nativeTokenAddress = getContract(ARBITRUM, 'NATIVE_TOKEN')!
   private shortTokenAddress = getTokenBySymbol(ARBITRUM, 'USDC.e')!.address
-  private swAddr: string
   private whitelistedTokens = getWhitelistedTokens(ARBITRUM)
+  private isPluginApprovedMap: Record<string, boolean> = {}
   private indexTokens = this.whitelistedTokens
     .filter((token) => !token.isStable && !token.isWrapped)
     .map((token) => {
@@ -101,22 +102,27 @@ export default class GmxV1Service implements IExchange {
       return tokenIn
     })
 
-  constructor(_swAddr: string) {
-    this.swAddr = _swAddr
-  }
-
-  async getDynamicMetadata(market: ExtendedMarket, provider: Provider): Promise<DynamicMarketMetadata> {
+  async getDynamicMetadata(market: ExtendedMarket, provider: Provider, opts?: ApiOpts): Promise<DynamicMarketMetadata> {
     const reader = Reader__factory.connect(getContract(ARBITRUM, 'Reader')!, provider)
 
     const nativeTokenAddress = getContract(ARBITRUM, 'NATIVE_TOKEN')
     const whitelistedTokens = V1_TOKENS[ARBITRUM]
     const tokenAddresses = whitelistedTokens.map((x) => x.address)
 
-    const fundingRateInfo = await reader.getFundingRates(
-      getContract(ARBITRUM, 'Vault')!,
-      nativeTokenAddress!,
-      tokenAddresses
-    )
+    const sTimeFI = getStaleTime(CACHE_SECOND * 30, opts)
+    const fundingRateInfo = await cacheFetch({
+      key: [
+        GMXV1_CACHE_PREFIX,
+        'getFundingRates',
+        nativeTokenAddress!,
+        tokenAddresses.join('-'),
+        getContract(ARBITRUM, 'Vault')!
+      ],
+      fn: () => reader.getFundingRates(getContract(ARBITRUM, 'Vault')!, nativeTokenAddress!, tokenAddresses),
+      staleTime: sTimeFI,
+      cacheTime: sTimeFI * CACHE_TIME_MULT,
+      opts
+    })
 
     const { infoTokens } = await useInfoTokens(provider, ARBITRUM, false, [BigNumber.from(0)], fundingRateInfo)
 
@@ -145,40 +151,52 @@ export default class GmxV1Service implements IExchange {
   }
 
   async setup(provider: Provider): Promise<UnsignedTxWithMetadata[]> {
-    const referralStorage = ReferralStorage__factory.connect(getContract(ARBITRUM, 'ReferralStorage')!, provider)
+    return Promise.resolve([])
+  }
+
+  async getReferralAndPluginApprovals(provider: Provider, wallet: string): Promise<UnsignedTxWithMetadata[]> {
     let txs: UnsignedTxWithMetadata[] = []
 
-    // Check if user already has a referral code set
-    const codePromise = referralStorage.traderReferralCodes(this.swAddr)
+    // check and set referral code
+    const referralCodeTxsPromise = this.checkAndSetReferralCodeTx(provider, wallet)
+
+    // check and set plugin approvals
+    const pluginApprovalTxsPromise = this.checkAndGetPluginApprovalTxs(provider, wallet)
+
+    const [referralCodeTxs, pluginApprovalTxs] = await Promise.all([referralCodeTxsPromise, pluginApprovalTxsPromise])
+
+    txs.push(...referralCodeTxs)
+    txs.push(...pluginApprovalTxs)
+
+    return txs
+  }
+
+  async checkAndGetPluginApprovalTxs(provider: Provider, wallet: string): Promise<UnsignedTxWithMetadata[]> {
+    let txs: UnsignedTxWithMetadata[] = []
+
+    // fetch approval status from cache
+    if (this.isPluginApprovedMap[wallet]) {
+      return txs
+    }
 
     // check whether plugins are approved or not
     const router = Router__factory.connect(getContract(ARBITRUM, 'Router')!, provider)
     const orderBook = getContract(ARBITRUM, 'OrderBook')!
     const positionRouter = getContract(ARBITRUM, 'PositionRouter')!
 
-    const obApprovalPromise = router.approvedPlugins(this.swAddr, orderBook)
-    const prApprovalPromise = router.approvedPlugins(this.swAddr, positionRouter)
+    const obApprovalPromise = router.approvedPlugins(wallet, orderBook)
+    const prApprovalPromise = router.approvedPlugins(wallet, positionRouter)
 
-    const [code, obApproval, prApproval] = await Promise.all([codePromise, obApprovalPromise, prApprovalPromise])
-
-    if (code == ethers.constants.HashZero) {
-      // set referral code
-      const setReferralCodeTx = await referralStorage.populateTransaction.setTraderReferralCodeByUser(
-        this.REFERRAL_CODE
-      )
-      txs.push({
-        tx: setReferralCodeTx,
-        type: 'GMX_V1',
-        data: undefined
-      })
-    }
+    const [obApproval, prApproval] = await Promise.all([obApprovalPromise, prApprovalPromise])
 
     if (!obApproval) {
       const approveOrderBookTx = await router.populateTransaction.approvePlugin(orderBook)
       txs.push({
         tx: approveOrderBookTx,
         type: 'GMX_V1',
-        data: undefined
+        data: undefined,
+        heading: 'Approve OrderBook',
+        desc: 'Approve OrderBook'
       })
     }
 
@@ -187,7 +205,38 @@ export default class GmxV1Service implements IExchange {
       txs.push({
         tx: approvePositionRouterTx,
         type: 'GMX_V1',
-        data: undefined
+        data: undefined,
+        heading: 'Approve PositionRouter',
+        desc: 'Approve PositionRouter'
+      })
+    }
+
+    // update cache if both plugins are approved already
+    if (obApproval && prApproval) {
+      this.isPluginApprovedMap[wallet] = true
+    }
+
+    return txs
+  }
+
+  async checkAndSetReferralCodeTx(provider: Provider, wallet: string): Promise<UnsignedTxWithMetadata[]> {
+    let txs: UnsignedTxWithMetadata[] = []
+    const referralStorage = ReferralStorage__factory.connect(getContract(ARBITRUM, 'ReferralStorage')!, provider)
+
+    // Fetch user referral code
+    const code = await referralStorage.traderReferralCodes(wallet)
+
+    if (code.toLowerCase() != this.REFERRAL_CODE.toLowerCase()) {
+      // set referral code
+      const setReferralCodeTx = await referralStorage.populateTransaction.setTraderReferralCodeByUser(
+        this.REFERRAL_CODE
+      )
+      txs.push({
+        tx: setReferralCodeTx,
+        type: 'GMX_V1',
+        data: undefined,
+        heading: 'Set Referral Code',
+        desc: 'Set Referral Code'
       })
     }
 
@@ -197,19 +246,22 @@ export default class GmxV1Service implements IExchange {
   async getApproveRouterSpendTx(
     tokenAddress: string,
     provider: Provider,
-    allowanceAmount: BigNumber
+    allowanceAmount: BigNumber,
+    wallet: string
   ): Promise<UnsignedTxWithMetadata | undefined> {
     let token = IERC20__factory.connect(tokenAddress, provider)
     const router = getContract(ARBITRUM, 'Router')!
 
-    let allowance = await token.allowance(this.swAddr, router)
+    let allowance = await token.allowance(wallet, router)
 
     if (allowance.lt(allowanceAmount)) {
       let tx = await token.populateTransaction.approve(router, ethers.constants.MaxUint256)
       return {
         tx,
         type: 'ERC20_APPROVAL',
-        data: { chainId: ARBITRUM, spender: router, token: tokenAddress }
+        data: { chainId: ARBITRUM, spender: router, token: tokenAddress },
+        heading: 'Approve Router Spend',
+        desc: 'Approve Router Spend'
       }
     }
   }
@@ -283,8 +335,16 @@ export default class GmxV1Service implements IExchange {
     return bigNumberify(indexPrice)!
   }
 
-  async createOrder(provider: Provider, market: ExtendedMarket, order: Order): Promise<UnsignedTxWithMetadata[]> {
+  async createOrder(
+    provider: Provider,
+    market: ExtendedMarket,
+    order: Order,
+    wallet: string
+  ): Promise<UnsignedTxWithMetadata[]> {
     let txs: UnsignedTxWithMetadata[] = []
+
+    // check for referral and plugin approvals
+    txs.push(...(await this.getReferralAndPluginApprovals(provider, wallet)))
 
     // approval tx
     if (
@@ -295,7 +355,8 @@ export default class GmxV1Service implements IExchange {
       let approvalTx = await this.getApproveRouterSpendTx(
         order.inputCollateral.address,
         provider,
-        order.inputCollateralAmount!
+        order.inputCollateralAmount!,
+        wallet
       )
       if (approvalTx) {
         txs.push(approvalTx)
@@ -394,7 +455,9 @@ export default class GmxV1Service implements IExchange {
       tx: createOrderTx!,
       type: 'GMX_V1',
       data: undefined,
-      ethRequired: await this.getEthRequired(provider, extraEthReq)
+      ethRequired: await this.getEthRequired(provider, extraEthReq, wallet),
+      heading: 'Create Order',
+      desc: 'Create Order'
     })
 
     return txs
@@ -403,8 +466,14 @@ export default class GmxV1Service implements IExchange {
   async updateOrder(
     provider: Provider,
     market: ExtendedMarket | undefined,
-    updatedOrder: Partial<ExtendedOrder>
+    updatedOrder: Partial<ExtendedOrder>,
+    wallet: string
   ): Promise<UnsignedTxWithMetadata[]> {
+    let txs: UnsignedTxWithMetadata[] = []
+
+    // check for referral and plugin approvals
+    txs.push(...(await this.getReferralAndPluginApprovals(provider, wallet)))
+
     const orderBook = OrderBook__factory.connect(getContract(ARBITRUM, 'OrderBook')!, provider)
 
     let updateOrderTx
@@ -428,16 +497,29 @@ export default class GmxV1Service implements IExchange {
       throw new Error('Invalid order type')
     }
 
-    return [{ tx: updateOrderTx, type: 'GMX_V1', data: undefined }]
+    txs.push({
+      tx: updateOrderTx,
+      type: 'GMX_V1',
+      data: undefined,
+      heading: 'Update Order',
+      desc: 'Update Order'
+    })
+
+    return txs
   }
 
   async cancelOrder(
     provider: Provider,
     market: Market | undefined,
-    order: Partial<ExtendedOrder>
+    order: Partial<ExtendedOrder>,
+    wallet: string
   ): Promise<UnsignedTxWithMetadata[]> {
-    const orderBook = OrderBook__factory.connect(getContract(ARBITRUM, 'OrderBook')!, provider)
+    let txs: UnsignedTxWithMetadata[] = []
 
+    // check for referral and plugin approvals
+    txs.push(...(await this.getReferralAndPluginApprovals(provider, wallet)))
+
+    const orderBook = OrderBook__factory.connect(getContract(ARBITRUM, 'OrderBook')!, provider)
     let cancelOrderTx
 
     if (order.type! == 'LIMIT_INCREASE') {
@@ -448,7 +530,15 @@ export default class GmxV1Service implements IExchange {
       throw new Error('Invalid order type')
     }
 
-    return [{ tx: cancelOrderTx, type: 'GMX_V1', data: undefined }]
+    txs.push({
+      tx: cancelOrderTx,
+      type: 'GMX_V1',
+      data: undefined,
+      heading: 'Cancel Order',
+      desc: 'Cancel Order'
+    })
+
+    return txs
   }
 
   getOrder(user: string, orderIdentifier: BigNumberish, market: ExtendedMarket): Promise<ExtendedOrder> {
@@ -579,7 +669,13 @@ export default class GmxV1Service implements IExchange {
 
     let sTimeFR = getStaleTime(CACHE_SECOND * 10, opts)
     const fundingRateInfoPromise = cacheFetch({
-      key: [GMXV1_CACHE_PREFIX, 'getFundingRates', 'ALL', getContract(ARBITRUM, 'Vault')!],
+      key: [
+        GMXV1_CACHE_PREFIX,
+        'getFundingRates',
+        nativeTokenAddress!,
+        tokenAddresses.join('-'),
+        getContract(ARBITRUM, 'Vault')!
+      ],
       fn: () => reader.getFundingRates(getContract(ARBITRUM, 'Vault')!, nativeTokenAddress!, tokenAddresses),
       staleTime: sTimeFR,
       cacheTime: sTimeFR * CACHE_TIME_MULT,
@@ -673,8 +769,14 @@ export default class GmxV1Service implements IExchange {
     position: ExtendedPosition,
     marginAmount: BigNumber, // token terms
     isDeposit: boolean,
-    transferToken: Token
+    transferToken: Token,
+    wallet: string
   ): Promise<UnsignedTxWithMetadata[]> {
+    let txs: UnsignedTxWithMetadata[] = []
+
+    // check for referral and plugin approvals
+    txs.push(...(await this.getReferralAndPluginApprovals(provider, wallet)))
+
     const positionRouter = PositionRouter__factory.connect(getContract(ARBITRUM, 'PositionRouter')!, provider)
     let indexAddress = this.getIndexTokenAddressFromPositionKey(position.indexOrIdentifier)
     let fillPrice = await this.getMarketPriceByIndexAddress(indexAddress)
@@ -683,13 +785,12 @@ export default class GmxV1Service implements IExchange {
     const path: string[] = []
 
     let marginTx: UnsignedTransaction
-    let txs: UnsignedTxWithMetadata[] = []
     let extraEthReq = BigNumber.from(0)
 
     if (isDeposit) {
       //approve router for token spends
       if (transferToken.address !== ethers.constants.AddressZero) {
-        let approvalTx = await this.getApproveRouterSpendTx(transferToken.address, provider, marginAmount)
+        let approvalTx = await this.getApproveRouterSpendTx(transferToken.address, provider, marginAmount, wallet)
         if (approvalTx) txs.push(approvalTx)
       }
 
@@ -751,7 +852,7 @@ export default class GmxV1Service implements IExchange {
         marginAmountUSD,
         BigNumber.from(0),
         position.direction == 'LONG' ? true : false,
-        this.swAddr,
+        wallet,
         fillPrice,
         0,
         this.EXECUTION_FEE,
@@ -767,7 +868,9 @@ export default class GmxV1Service implements IExchange {
       tx: marginTx,
       type: 'GMX_V1',
       data: undefined,
-      ethRequired: await this.getEthRequired(provider, extraEthReq)
+      ethRequired: await this.getEthRequired(provider, extraEthReq, wallet),
+      heading: 'Update Margin',
+      desc: 'Update Margin'
     })
 
     return txs
@@ -780,20 +883,25 @@ export default class GmxV1Service implements IExchange {
     isTrigger: boolean,
     triggerPrice: BigNumber | undefined,
     triggerAboveThreshold: boolean | undefined,
-    outputToken: Token | undefined
+    outputToken: Token | undefined,
+    wallet: string
   ): Promise<UnsignedTxWithMetadata[]> {
     let txs: UnsignedTxWithMetadata[] = []
+
+    // check for referral and plugin approvals
+    txs.push(...(await this.getReferralAndPluginApprovals(provider, wallet)))
+
     let indexAddress = this.getIndexTokenAddressFromPositionKey(position.indexOrIdentifier)
 
     if (!isTrigger) {
       let remainingSize = position.size.sub(closeSize)
 
       // close all related tp/sl orders if order.sizeDelta > remaining size
-      const orders = (await this.getAllOrdersForPosition(this.swAddr, provider, position, undefined)).filter(
+      const orders = (await this.getAllOrdersForPosition(wallet, provider, position, undefined)).filter(
         (order) => order.triggerType != 'NONE' && order.sizeDelta.gt(remainingSize)
       )
       for (const order of orders) {
-        const cancelOrderTx = await this.cancelOrder(provider, undefined, order)
+        const cancelOrderTx = await this.cancelOrder(provider, undefined, order, wallet)
         txs.push(...cancelOrderTx)
       }
 
@@ -818,7 +926,7 @@ export default class GmxV1Service implements IExchange {
         BigNumber.from(0),
         closeSize,
         position.direction! == 'LONG' ? true : false,
-        this.swAddr,
+        wallet,
         fillPrice,
         0,
         this.EXECUTION_FEE,
@@ -832,7 +940,9 @@ export default class GmxV1Service implements IExchange {
         tx: createOrderTx,
         type: 'GMX_V1',
         data: undefined,
-        ethRequired: await this.getEthRequired(provider)
+        ethRequired: await this.getEthRequired(provider, undefined, wallet),
+        heading: 'Close Position',
+        desc: 'Close Position'
       })
     } else {
       const orderBook = OrderBook__factory.connect(getContract(ARBITRUM, 'OrderBook')!, provider)
@@ -853,7 +963,9 @@ export default class GmxV1Service implements IExchange {
         tx: createOrderTx,
         type: 'GMX_V1',
         data: undefined,
-        ethRequired: await this.getEthRequired(provider)
+        ethRequired: await this.getEthRequired(provider, undefined, wallet),
+        heading: 'Close Position',
+        desc: 'Close Position'
       })
     }
 
@@ -1290,6 +1402,13 @@ export default class GmxV1Service implements IExchange {
     return token
   }
 
+  deposit(provider: Provider, market: ExtendedMarket, depositAmount: BigNumber): Promise<UnsignedTxWithMetadata[]> {
+    throw new Error('Method not implemented.')
+  }
+  withdraw(provider: Provider, market: ExtendedMarket, withdrawAmount: BigNumber): Promise<UnsignedTxWithMetadata[]> {
+    throw new Error('Method not implemented.')
+  }
+
   ////////// HELPERS ////////////
   // @timer()
   async getAccountOrders(account: string, provider: Provider) {
@@ -1467,9 +1586,13 @@ export default class GmxV1Service implements IExchange {
     return [...increaseOrders, ...decreaseOrders]
   }
 
-  async getEthRequired(provider: Provider, extraEthReq: BigNumber = BigNumber.from(0)): Promise<BigNumber | undefined> {
-    const ethBalance = await provider.getBalance(this.swAddr)
-    const ethRequired = this.EXECUTION_FEE.add(extraEthReq)
+  async getEthRequired(
+    provider: Provider,
+    extraEthReq: BigNumber = BigNumber.from(0),
+    wallet: string
+  ): Promise<BigNumber | undefined> {
+    const ethBalance = await provider.getBalance(wallet)
+    const ethRequired = this.EXECUTION_FEE.add(extraEthReq || ZERO)
 
     if (ethBalance.lt(ethRequired)) return ethRequired.sub(ethBalance).add(1)
   }

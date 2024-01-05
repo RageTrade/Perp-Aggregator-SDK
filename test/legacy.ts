@@ -46,7 +46,7 @@ const signer = new ethers.Wallet(wpk, provider)
 
 const sdk = new KwentaSDK({
   networkId: 10,
-  provider: rpc[10],
+  provider: rpc[10]
   // provider: new ethers.providers.JsonRpcProvider(
   //   'https://optimism.blockpi.network/v1/rpc/e9eb838be05076b18bceb9e7efe3797c93bed264',
   //   10
@@ -99,8 +99,8 @@ async function getTradePreview(
       },
       slippage: '1'
     },
-    undefined
-    // { bypassCache: true, overrideStaleTime: undefined }
+    undefined,
+    { bypassCache: true, overrideStaleTime: undefined }
   )
   return tradePreview
 }
@@ -110,7 +110,8 @@ async function createLongOrder(
   sizeDelta: string,
   direction: 'LONG' | 'SHORT',
   triggerPrice: BigNumber,
-  inputCollateral: string
+  inputCollateral: string,
+  wallet: string
 ): Promise<UnsignedTxWithMetadata[]> {
   const createOrderTxs = await ss.createOrder(
     provider,
@@ -147,7 +148,8 @@ async function createLongOrder(
         triggerAboveThreshold: true
       },
       slippage: '1'
-    }
+    },
+    wallet
   )
 
   return createOrderTxs
@@ -161,7 +163,7 @@ async function getIdleMargins(ss: SynthetixV2Service) {
   return idleMargins
 }
 
-async function cancelDelayedOffChainOrder(ss: SynthetixV2Service): Promise<UnsignedTxWithMetadata[]> {
+async function cancelDelayedOffChainOrder(ss: SynthetixV2Service, wallet: string): Promise<UnsignedTxWithMetadata[]> {
   const cancelOrder = await ss.cancelOrder(
     provider,
     {
@@ -179,13 +181,18 @@ async function cancelDelayedOffChainOrder(ss: SynthetixV2Service): Promise<Unsig
       },
       protocolName: 'SYNTHETIX_V2'
     },
-    {}
+    {},
+    wallet
   )
   logObject('Cancel Order: ', cancelOrder)
   return cancelOrder
 }
 
-async function createTransferMarginOrder(ss: SynthetixV2Service, amount: BigNumber): Promise<UnsignedTxWithMetadata[]> {
+async function createTransferMarginOrder(
+  ss: SynthetixV2Service,
+  amount: BigNumber,
+  wallet: string
+): Promise<UnsignedTxWithMetadata[]> {
   const createOrder = await ss.createOrder(
     provider,
     {
@@ -221,7 +228,8 @@ async function createTransferMarginOrder(ss: SynthetixV2Service, amount: BigNumb
         triggerAboveThreshold: true
       },
       slippage: '1'
-    }
+    },
+    wallet
   )
   logObject('Create Order: ', createOrder)
   return createOrder
@@ -404,7 +412,9 @@ const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
 
 async function synService() {
   startHermesStreaming()
-  const ss = new SynthetixV2Service(sdk, '0x6F8f75930de3ECB4e6b6e745d5E14B1478D282CA')
+  startStreaming()
+  await delay(1000)
+  const ss = new SynthetixV2Service()
 
   // const tradeHistory = await ss.getTradesHistory(
   //   // "0x4dBc24BEb46fC22CD2322a9fF9e5A99CE0F0c3Eb",
@@ -510,6 +520,9 @@ async function synService() {
   const direction = 'LONG'
   const marketAddress = '0x2b3bb4c683bfc5239b029131eef3b1d214478d93'
 
+  // const margins = await ss.getIdleMargins('0x2f88a09ed4174750a464576FE49E586F90A34820', undefined)
+  // console.dir({ margins }, { depth: 4 })
+
   // const openMarkets = await compositeService();
   // const futureMarkets = await ss.getPartialFutureMarketsFromOpenMarkets(
   //   openMarkets
@@ -541,12 +554,12 @@ async function synService() {
   //   logObject("Trades History: ", t);
   // });
 
-  console.log('Synthetix')
-  for (let i = 0; i < 10; i++) {
-    const positions = (
-      await ss.getAllPositions('0xD81c12559fBfC78841bBFF3618eaB880646847BA', provider, undefined, undefined)
-    ).result
-  }
+  // console.log('Synthetix')
+  // for (let i = 0; i < 10; i++) {
+  //   const positions = (
+  //     await ss.getAllPositions('0xD81c12559fBfC78841bBFF3618eaB880646847BA', provider, undefined, undefined)
+  //   ).result
+  // }
   // positions.forEach((p) => logObject("Position: ", p));
   // logObject('Position: ', positions[0])
 
@@ -634,25 +647,26 @@ async function synService() {
 
   const ethMarket = supportedMarkets.find((m) => m.indexOrIdentifier === FuturesMarketKey.sETHPERP)!
 
-  // for (let i = 0; i < 2; i++) {
-  //   const marketPrice = BigNumber.from((await ss.getMarketPrice(ethMarket))!.value)
-  //   await delay(100)
-  //   console.time('getTradePreview')
-  //   const tradePreview = await getTradePreview(
-  //     '0x2f88a09ed4174750a464576FE49E586F90A34820',
-  //     ss,
-  //     sizeDelta,
-  //     '50.86',
-  //     direction,
-  //     // ethers.utils.parseUnits('2109', 18),
-  //     marketPrice,
-  //     ethMarket
-  //   )
-  //   console.timeEnd('getTradePreview')
-  //   console.log('\n')
-  //   logObject('Trade Preview: ', tradePreview)
-  //   // logObject('PriceImapct: ', tradePreview.priceImpact)
-  // }
+  for (let i = 0; i < 1; i++) {
+    const marketPrice = BigNumber.from((await ss.getMarketPrice(ethMarket))!.value)
+    // await delay(100)
+    // console.time('getTradePreview')
+    const tradePreview = await getTradePreview(
+      '0x2f88a09ed4174750a464576FE49E586F90A34820',
+      ss,
+      sizeDelta,
+      '50.86',
+      direction,
+      // ethers.utils.parseUnits('2109', 18),
+      marketPrice,
+      ethMarket
+    )
+    // console.timeEnd('getTradePreview')
+    console.log('\n')
+    // console.dir({ tradePreview }, { depth: 4 })
+    logObject('Trade Preview: ', tradePreview)
+    logObject('PriceImpact: ', tradePreview.priceImpact)
+  }
 
   // if (tradePreview.status == 0) {
   //   const triggerPrice = direction.includes("SHORT")
@@ -735,7 +749,7 @@ async function gmxService() {
   const provider = rpc[ARBITRUM]
 
   const signer = new ethers.Wallet(wpk, provider)
-  const gs = new GmxV1Service(signer.address)
+  const gs = new GmxV1Service()
 
   // const allOrders = (await gs.getAllOrders(w, provider, undefined, undefined)).result
 
@@ -1057,8 +1071,8 @@ async function gmxService() {
 }
 
 async function compositeService() {
-  const ss = new SynthetixV2Service(sdk, '0x89E369321619114e317a3121A2693f39728f51f1')
-  const gs = new GmxV1Service('0x89E369321619114e317a3121A2693f39728f51f1')
+  const ss = new SynthetixV2Service()
+  const gs = new GmxV1Service()
 
   const cs = new CompositeService(ss, gs)
 
@@ -1082,7 +1096,7 @@ async function testService() {
 
 async function testAutoRouter() {
   // synthetix initial setup
-  const ss = new SynthetixV2Service(sdk, w)
+  const ss = new SynthetixV2Service()
   const supportedNetworks = ss.supportedNetworks()
   // logObject("Supported Networks: ", supportedNetworks[0]);
 
@@ -1100,7 +1114,7 @@ async function testAutoRouter() {
     ARBITRUM
   )
   const signer = new ethers.Wallet(wpk, gmxProvider)
-  const gs = new GmxV1Service(signer.address)
+  const gs = new GmxV1Service()
   let gmxSupportedMarkets = await gs.supportedMarkets(gs.supportedNetworks()[0])
   const gmxBtcMarket = gmxSupportedMarkets.find(
     (m) => m.indexOrIdentifier.toLowerCase() === '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f'.toLowerCase() //BTC market
