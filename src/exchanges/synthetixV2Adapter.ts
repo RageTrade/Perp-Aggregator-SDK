@@ -315,10 +315,10 @@ export default class SynthetixV2Adapter implements IAdapterV1 {
       if (!validDenomination(o.marginDelta, true)) throw new Error('Margin delta must be token denominated')
 
       const marginDeltaBN = getBNFromFN(o.marginDelta.amount)
-      const sizeDeltaBN = getBNFromFN(o.sizeDelta.amount.toFormat(18))
+      const sizeDeltaBN = getBNFromFN(o.sizeDelta.amount.toFormat(D18))
 
       const marketAddress = decodeMarketId(m.marketId).protocolMarketId
-      const marketPrice = getTokenPriceD(m.indexToken.symbol, 18)!
+      const marketPrice = getTokenPriceD(m.indexToken.symbol, D18)!
 
       const futureMarket = m.metadata! as FuturesMarket
       const sTimeSB = getStaleTime(CACHE_MINUTE, opts)
@@ -341,7 +341,7 @@ export default class SynthetixV2Adapter implements IAdapterV1 {
         {
           sizeDelta: sizeDelta,
           marginDelta: wei(marginDeltaBN).sub(sUsdBalanceInMarket),
-          orderPrice: wei(getBNFromFN(o.triggerData!.triggerPrice))
+          orderPrice: wei(getBNFromFN(o.triggerData!.triggerPrice.toFormat(D18)))
         },
         opts
       )
