@@ -193,8 +193,8 @@ export default class SynthetixV2Service implements IExchange {
     await this.sdk.setProvider(provider)
 
     if (order.inputCollateralAmount.gt(0)) {
-      // withdraw unused collateral tx's
-      txs.push(...(await this.withdrawUnusedCollateral(wallet, provider)))
+      // // withdraw unused collateral tx's
+      // txs.push(...(await this.withdrawUnusedCollateral(wallet, provider)))
 
       // deposit
       let depositTx = await this.formulateDepositTx(marketAddress, wei(order.inputCollateralAmount))
@@ -332,7 +332,7 @@ export default class SynthetixV2Service implements IExchange {
 
     if (isDeposit) {
       // withdraw unused collateral tx's
-      txs.push(...(await this.withdrawUnusedCollateral(wallet, provider)))
+      // txs.push(...(await this.withdrawUnusedCollateral(wallet, provider)))
 
       // deposit
       let depositTx = await this.formulateDepositTx(position.marketAddress!, wei(marginAmount))
