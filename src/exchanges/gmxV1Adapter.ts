@@ -372,6 +372,7 @@ export default class GmxV1Adapter implements IAdapterV1 {
 
       const tokenAddressString = this.getTokenAddressString(inputCollateralAddress)
       const market = (await this.getMarketsInfo([order.marketId]))[0]
+      const marketIndexTokenAddress = this.getTokenAddressString(market.indexToken.address[ARBITRUM]!)
 
       let createOrderTx: UnsignedTransaction
       let extraEthReq = BigNumber.from(0)
@@ -390,10 +391,10 @@ export default class GmxV1Adapter implements IAdapterV1 {
         createOrderTx = await orderBook.populateTransaction.createIncreaseOrder(
           path,
           marginDeltaBN,
-          market.indexToken.address[ARBITRUM]!,
+          marketIndexTokenAddress,
           0,
           sizeDeltaBN,
-          market.indexToken.address[ARBITRUM]!,
+          marketIndexTokenAddress,
           order.direction == 'LONG' ? true : false,
           triggerPriceBN,
           !(order.direction == 'LONG'),
@@ -409,8 +410,8 @@ export default class GmxV1Adapter implements IAdapterV1 {
         const path: string[] = []
         path.push(tokenAddressString)
         if (order.direction == 'LONG') {
-          if (tokenAddressString.toLowerCase() != market.indexToken.address[ARBITRUM]!.toLowerCase()) {
-            path.push(market.indexToken.address[ARBITRUM]!)
+          if (tokenAddressString.toLowerCase() != marketIndexTokenAddress.toLowerCase()) {
+            path.push(marketIndexTokenAddress)
           }
         } else {
           if (tokenAddressString != this.shortTokenAddress) {
@@ -426,7 +427,7 @@ export default class GmxV1Adapter implements IAdapterV1 {
         if (inputCollateralAddress != ethers.constants.AddressZero) {
           createOrderTx = await positionRouter.populateTransaction.createIncreasePosition(
             path,
-            market.indexToken.address[ARBITRUM]!,
+            marketIndexTokenAddress,
             marginDeltaBN,
             0,
             sizeDeltaBN,
@@ -444,7 +445,7 @@ export default class GmxV1Adapter implements IAdapterV1 {
 
           createOrderTx = await positionRouter.populateTransaction.createIncreasePositionETH(
             path,
-            market.indexToken.address[ARBITRUM]!,
+            marketIndexTokenAddress,
             0,
             sizeDeltaBN,
             order.direction == 'LONG' ? true : false,
