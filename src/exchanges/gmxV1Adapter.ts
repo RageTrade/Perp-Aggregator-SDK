@@ -339,7 +339,7 @@ export default class GmxV1Adapter implements IAdapterV1 {
           market.indexToken.address[ARBITRUM]!,
           0,
           sizeDeltaBN,
-          market.indexToken.address[ARBITRUM]!,
+          order.direction == 'LONG' ? market.indexToken.address[ARBITRUM]! : this.shortTokenAddress,
           order.direction == 'LONG' ? true : false,
           triggerPriceBN,
           !(order.direction == 'LONG'),
