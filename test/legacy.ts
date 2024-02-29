@@ -441,6 +441,7 @@ async function synService() {
   // logObject("Supported Networks: ", supportedNetworks[0]);
 
   const supportedMarkets = await ss.supportedMarkets(supportedNetworks[0])
+  console.log(supportedMarkets.map((m) => m.asset))
   // const pepeMarket = supportedMarkets.find(
   //     (m) => m.indexOrIdentifier === FuturesMarketKey.sPEPEPERP
   //   )!;
