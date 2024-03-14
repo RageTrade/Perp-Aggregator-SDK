@@ -50,7 +50,7 @@ export class Multicall {
     let instance = Multicall.instances[chainId]
 
     if (!instance || instance.chainId !== chainId) {
-      const rpcUrl = 'https://arbitrum.blockpi.network/v1/rpc/3fccabab81b09aeff58df1caaea8f27c70346335'
+      const rpcUrl = 'https://arbitrum.blockpi.network/v1/rpc/49cf2d710acdabe5c086b4e298d7c82458a08722'
 
       if (!rpcUrl) {
         return undefined
@@ -143,7 +143,7 @@ export class Multicall {
       // eslint-disable-next-line no-console
       console.groupEnd()
 
-      const rpcUrl = 'https://arbitrum.blockpi.network/v1/rpc/3fccabab81b09aeff58df1caaea8f27c70346335'
+      const rpcUrl = 'https://arbitrum.blockpi.network/v1/rpc/49cf2d710acdabe5c086b4e298d7c82458a08722'
 
       if (!rpcUrl) {
         throw e
