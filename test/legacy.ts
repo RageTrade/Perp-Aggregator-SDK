@@ -46,7 +46,7 @@ const signer = new ethers.Wallet(wpk, provider)
 
 const sdk = new KwentaSDK({
   networkId: 10,
-  provider: rpc[10],
+  provider: rpc[10]
   // provider: new ethers.providers.JsonRpcProvider(
   //   'https://optimism.blockpi.network/v1/rpc/bb6bdff44725a80b24301a08741599cecf1121ca',
   //   10
@@ -1090,13 +1090,13 @@ async function testAutoRouter() {
   const synSupportedMarkets = await ss.supportedMarkets(supportedNetworks[0])
   const synBtcMarket = synSupportedMarkets.find((m) => m.indexOrIdentifier === FuturesMarketKey.sBTCPERP)!
   let synProvider = new ethers.providers.JsonRpcProvider(
-    'https://optimism.blockpi.network/v1/rpc/bb6bdff44725a80b24301a08741599cecf1121ca',
+    'https://optimism.blockpi.network/v1/rpc/e9eb838be05076b18bceb9e7efe3797c93bed264',
     10
   )
 
   // gmx initial setup
   const gmxProvider = new ethers.providers.JsonRpcProvider(
-    'https://arbitrum.blockpi.network/v1/rpc/49cf2d710acdabe5c086b4e298d7c82458a08722',
+    'https://arbitrum.blockpi.network/v1/rpc/b9b90ca71a8ee022867bbd01acea67f69409cf8e',
     // "https://rpc.ankr.com/arbitrum",
     ARBITRUM
   )
