@@ -428,33 +428,44 @@ export default class FuturesService {
     const positionCalls = []
     const liquidationCalls = []
 
+    const skipMarkets = [
+      '0x7341504550455250000000000000000000000000000000000000000000000000',
+      '0x7358415550455250000000000000000000000000000000000000000000000000',
+      '0x7358414750455250000000000000000000000000000000000000000000000000',
+      '0x7345555250455250000000000000000000000000000000000000000000000000',
+      '0x7341554450455250000000000000000000000000000000000000000000000000',
+      '0x7347425050455250000000000000000000000000000000000000000000000000',
+      '0x73464c4f4b495045525000000000000000000000000000000000000000000000',
+      '0x734b4e4350455250000000000000000000000000000000000000000000000000',
+      '0x73524e4452504552500000000000000000000000000000000000000000000000',
+      '0x734f4e4550455250000000000000000000000000000000000000000000000000',
+      '0x735a494c50455250000000000000000000000000000000000000000000000000',
+      '0x735a454350455250000000000000000000000000000000000000000000000000',
+      '0x7358545a50455250000000000000000000000000000000000000000000000000',
+      '0x73554d4150455250000000000000000000000000000000000000000000000000',
+      '0x73454e4a50455250000000000000000000000000000000000000000000000000',
+      '0x7331494e43485045525000000000000000000000000000000000000000000000',
+      '0x7343454c4f504552500000000000000000000000000000000000000000000000',
+      '0x735a525850455250000000000000000000000000000000000000000000000000',
+      '0x7353544554484554485045525000000000000000000000000000000000000000',
+      '0x7343565850455250000000000000000000000000000000000000000000000000'
+    ]
+
     for (const { address: marketAddress, marketKey } of futuresMarkets) {
+      if (skipMarkets.includes(formatBytes32String(marketKey))) {
+        continue
+      }
       positionCalls.push(marketDataContract.positionDetailsForMarketKey(formatBytes32String(marketKey), address))
       const marketContract = new EthCallContract(marketAddress, PerpsMarketABI)
       liquidationCalls.push(marketContract.canLiquidate(address))
     }
 
     // TODO: Combine these two?
-    // const positionDetails1 = await this.sdk.context.multicallProvider.all(positionCalls.slice(0, 20)) as PositionDetail[]
-    // const positionDetails2 = await this.sdk.context.multicallProvider.all(positionCalls.slice(20, 40)) as PositionDetail[]
-    // const positionDetails3 = await this.sdk.context.multicallProvider.all(positionCalls.slice(40, 60)) as PositionDetail[]
-    // const positionDetails4 = await this.sdk.context.multicallProvider.all(positionCalls.slice(60, positionCalls.length)) as PositionDetail[]
-    // const positionDetails = [...positionDetails1, ...positionDetails2, ...positionDetails3, ...positionDetails4]
+    const positionDetails = await this.sdk.context.multicallProvider.all(positionCalls) as PositionDetail[]
     // console.log('sdk - fetched position details')
     // const canLiquidateState = (await this.sdk.context.multicallProvider.all(
     // 	liquidationCalls
     // )) as boolean[]
-
-    const positionDetails: PositionDetail[] = []
-    for (let i = 0; i < positionCalls.length; i ++) {
-      try {
-        const position = await this.sdk.context.multicallProvider.all([positionCalls[i]]) as PositionDetail[]
-        positionDetails.push(position[0])
-      } catch (e) {
-        // console.error('Errored out call: ', positionCalls[i])
-        // console.error('Error fetching position details: ', e, { e }, JSON.stringify(e, null, 2))
-      }
-    }
 
     // map the positions using the results
     const positions = await Promise.all(
