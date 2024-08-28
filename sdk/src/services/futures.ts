@@ -440,6 +440,7 @@ export default class FuturesService {
     const positionDetails3 = await this.sdk.context.multicallProvider.all(positionCalls.slice(40, 60)) as PositionDetail[]
     const positionDetails4 = await this.sdk.context.multicallProvider.all(positionCalls.slice(60, positionCalls.length)) as PositionDetail[]
     const positionDetails = [...positionDetails1, ...positionDetails2, ...positionDetails3, ...positionDetails4]
+    console.log('sdk - fetched position details')
     // const canLiquidateState = (await this.sdk.context.multicallProvider.all(
     // 	liquidationCalls
     // )) as boolean[]
