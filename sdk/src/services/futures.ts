@@ -451,8 +451,8 @@ export default class FuturesService {
         const position = await this.sdk.context.multicallProvider.all([positionCalls[i]]) as PositionDetail[]
         positionDetails.push(position[0])
       } catch (e) {
-        console.error('Errored out call: ', positionCalls[i])
-        console.error('Error fetching position details: ', e, { e }, JSON.stringify(e, null, 2))
+        // console.error('Errored out call: ', positionCalls[i])
+        // console.error('Error fetching position details: ', e, { e }, JSON.stringify(e, null, 2))
       }
     }
 
