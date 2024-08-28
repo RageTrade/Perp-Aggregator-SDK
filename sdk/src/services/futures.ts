@@ -435,15 +435,26 @@ export default class FuturesService {
     }
 
     // TODO: Combine these two?
-    const positionDetails1 = await this.sdk.context.multicallProvider.all(positionCalls.slice(0, 20)) as PositionDetail[]
-    const positionDetails2 = await this.sdk.context.multicallProvider.all(positionCalls.slice(20, 40)) as PositionDetail[]
-    const positionDetails3 = await this.sdk.context.multicallProvider.all(positionCalls.slice(40, 60)) as PositionDetail[]
-    const positionDetails4 = await this.sdk.context.multicallProvider.all(positionCalls.slice(60, positionCalls.length)) as PositionDetail[]
-    const positionDetails = [...positionDetails1, ...positionDetails2, ...positionDetails3, ...positionDetails4]
-    console.log('sdk - fetched position details')
+    // const positionDetails1 = await this.sdk.context.multicallProvider.all(positionCalls.slice(0, 20)) as PositionDetail[]
+    // const positionDetails2 = await this.sdk.context.multicallProvider.all(positionCalls.slice(20, 40)) as PositionDetail[]
+    // const positionDetails3 = await this.sdk.context.multicallProvider.all(positionCalls.slice(40, 60)) as PositionDetail[]
+    // const positionDetails4 = await this.sdk.context.multicallProvider.all(positionCalls.slice(60, positionCalls.length)) as PositionDetail[]
+    // const positionDetails = [...positionDetails1, ...positionDetails2, ...positionDetails3, ...positionDetails4]
+    // console.log('sdk - fetched position details')
     // const canLiquidateState = (await this.sdk.context.multicallProvider.all(
     // 	liquidationCalls
     // )) as boolean[]
+
+    const positionDetails: PositionDetail[] = []
+    for (let i = 0; i < positionCalls.length; i ++) {
+      try {
+        const position = await this.sdk.context.multicallProvider.all([positionCalls[i]]) as PositionDetail[]
+        positionDetails.push(position[0])
+      } catch (e) {
+        console.error('Errored out call: ', positionCalls[i])
+        console.error('Error fetching position details: ', e)
+      }
+    }
 
     // map the positions using the results
     const positions = await Promise.all(
