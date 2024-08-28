@@ -452,7 +452,7 @@ export default class FuturesService {
         positionDetails.push(position[0])
       } catch (e) {
         console.error('Errored out call: ', positionCalls[i])
-        console.error('Error fetching position details: ', e)
+        console.error('Error fetching position details: ', e, { e }, JSON.stringify(e, null, 2))
       }
     }
 
