@@ -36,7 +36,7 @@ import {
   ExchangeRouter__factory,
   IERC20__factory,
   Reader
-} from '../../typechain/gmx-v2'
+} from '../../typechain/gmx-v2/typechain'
 import { BigNumber, ethers } from 'ethers'
 import { OrderType, ApiOpts } from '../interfaces/V1/IRouterAdapterBaseV1'
 import { OrderDirection, Provider } from '../interface'
@@ -132,7 +132,7 @@ const mapping: Record<string, Record<string, number>> = {
 export default class GmxV2Service implements IAdapterV1 {
   private READER_ADDR = '0xf60becbba223EEA9495Da3f606753867eC10d139'
   private DATASTORE_ADDR = '0xFD70de6b91282D8017aA4E741e9Ae325CAb992d8'
-  private EXCHANGE_ROUTER = '0x7C68C7866A64FA2160F78EEaE12217FFbf871fa8'
+  private EXCHANGE_ROUTER = '0x69C527fC77291722b52649E45c838e41be8Bf5d5'
 
   private ROUTER_ADDR = '0x7452c558d45f8afC8c83dAe62C3f8A5BE19c71f6'
   private ORDER_VAULT_ADDR = '0x31eF83a530Fde1B38EE9A18093A333D8Bbbc40D5'
@@ -407,6 +407,7 @@ export default class GmxV2Service implements IAdapterV1 {
           receiver: this._smartWallet,
           callbackContract: ethers.constants.AddressZero,
           uiFeeReceiver: ethers.constants.AddressZero,
+          cancellationReceiver: ethers.constants.AddressZero,
           market: mkt.market.marketToken,
           initialCollateralToken:
             od.collateral.symbol === 'ETH' ? tokens.WETH.address[42161]! : od.collateral.address[42161]!,
@@ -421,6 +422,7 @@ export default class GmxV2Service implements IAdapterV1 {
           callbackGasLimit: ethers.constants.Zero,
           minOutputAmount: ethers.constants.Zero
         },
+        autoCancel: false,
         orderType: this._mapOrderType(od.type, od.direction),
         decreasePositionSwapType: DecreasePositionSwapType.NoSwap,
         isLong: od.direction == 'LONG',
@@ -532,7 +534,8 @@ export default class GmxV2Service implements IAdapterV1 {
         od.sizeDelta.amount.value,
         acceptablePrice,
         triggerPrice,
-        ethers.constants.Zero
+        ethers.constants.Zero,
+        false
       )
 
       // encode as multicall
@@ -664,6 +667,7 @@ export default class GmxV2Service implements IAdapterV1 {
           callbackContract: ethers.constants.AddressZero,
           uiFeeReceiver: ethers.constants.AddressZero,
           market: positionInfo[i].marketId.split('-')[2],
+          cancellationReceiver: ethers.constants.AddressZero,
           initialCollateralToken: positionInfo[i].collateral.address[42161]!,
           swapPath: []
         },
@@ -676,6 +680,7 @@ export default class GmxV2Service implements IAdapterV1 {
           callbackGasLimit: ethers.constants.Zero,
           minOutputAmount: ethers.constants.Zero
         },
+        autoCancel: false,
         orderType: orderType,
         decreasePositionSwapType: DecreasePositionSwapType.SwapPnlTokenToCollateralToken,
         isLong: positionInfo[i].direction == 'LONG',
@@ -770,6 +775,7 @@ export default class GmxV2Service implements IAdapterV1 {
           callbackContract: ethers.constants.AddressZero,
           uiFeeReceiver: ethers.constants.AddressZero,
           market: positionInfo[i].marketId.split('-')[2],
+          cancellationReceiver: ethers.constants.AddressZero,
           initialCollateralToken: initialCollateralToken,
           swapPath: []
         },
@@ -782,6 +788,7 @@ export default class GmxV2Service implements IAdapterV1 {
           callbackGasLimit: ethers.constants.Zero,
           minOutputAmount: ethers.constants.Zero
         },
+        autoCancel: false,
         orderType: orderType,
         decreasePositionSwapType: DecreasePositionSwapType.NoSwap,
         isLong: positionInfo[i].direction == 'LONG',
