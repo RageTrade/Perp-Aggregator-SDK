@@ -214,7 +214,9 @@ export async function useGasPrice(chainId: number) {
           gasPrice = gasPrice.add(feeData.maxPriorityFeePerGas)
         }
       }
-
+      if (chainId === 42161) {
+        gasPrice = gasPrice.mul(15).div(10)
+      }
       const premium = GAS_PRICE_ADJUSTMENT_MAP[42161]
       return gasPrice.add(premium)
     },
